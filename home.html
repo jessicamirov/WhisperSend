@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - WhisperSend</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        .header {
+            background-color: #2d3748;
+            color: #fff;
+        }
+        .footer {
+            background-color: #2d3748;
+            color: #fff;
+        }
+        .main-section {
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .square {
+            width: 48%;
+            height: 200px;
+            background-color: #edf2f7;
+            display: inline-block;
+            vertical-align: top;
+            margin-right: 20px;
+            margin-bottom: 20px;
+            padding: 20px;
+            text-align: center; 
+        }
+        .square h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #6cb2eb;
+            padding: 12px 20px;
+            border-radius: 30px;
+            border: none;
+            color: #fff;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+        .invite-button {
+            background-color: #4299e1;
+        }
+    </style>
+</head>
+<body>
+    <header class="header py-4">
+        <div class="container mx-auto flex items-center justify-between">
+            <h1 class="text-3xl font-bold">WhisperSend</h1>
+            <nav class="mt-2">
+                <a href="#" class="mr-4">Home</a>
+                <a href="#" class="mr-4">Information</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container mx-auto mt-8">
+        <div class="main-section p-8 rounded-md shadow-md">
+            <div class="text-center mb-4">
+                <span class="text-gray-1200 mr-7 peer-id">User's Peer ID: 123456</span>
+                <button class="invite-button">Send Invite</button>
+                <button class="invite-button ml-2">Recalculate Keys</button>
+            </div>
+            <div class="square">
+                <h2>Self-Encryption</h2>
+                <p class="mb-4">Encrypt and decrypt in your device</p>
+                <button>Encrypt & Save</button>
+            </div>
+            <div class="square">
+                <h2>Connect with Peer</h2>
+                <input type="text" class="rounded py-2 px-4 bg-gray-200 w-full mb-2">
+                <button>Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer py-4">
+        <div class="container mx-auto">
+            <p class="text-center">&copy; 2024 WhisperSend. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
