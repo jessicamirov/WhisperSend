@@ -6,7 +6,7 @@
 
 git init
 git add .
-git commit -m "first commit"
+git commit -m "second commit"
 git branch -M main
 git remote add origin https://github.com/jessicamirov/WhisperSend.git
 git push -u origin main
