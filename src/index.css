@@ -26,4 +26,23 @@ html {
   color: white;
   margin-right: 16px;
 }
+.chat-bubble {
+  position: relative;
+  padding: 10px;
+  border-radius: 20px;
+}
+
+.chat-bubble:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 10px;
+  border-width: 10px;
+  border-style: solid;
+  border-color: transparent transparent gray transparent;
+}
+
+.chat-bubble.bg-blue-500:after {
+  border-color: transparent transparent #3b82f6 transparent;
+}
 
