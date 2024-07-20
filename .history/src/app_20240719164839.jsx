@@ -30,7 +30,7 @@ const App = () => (
         <Encrypt path="/encrypt" />
         <Decrypt path="/decrypt" />
         <ShareSecurely path="/share-securely" />
-        <ChatPage path="/chat/:connectPeerId" />
+        <ChatPage path="/chat" />
       </Router>
       <footer className="bg-blue-900 dark:bg-blue-700 text-white p-4 text-center">
         <p>&copy; 2024 WhisperSend. All rights reserved.</p>

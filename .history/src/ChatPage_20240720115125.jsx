@@ -4,10 +4,11 @@ import { FaPaperclip, FaSmile } from 'react-icons/fa';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import sendSound from './assets/whisper.mp3';
-import { PeerIdContext } from './PeerIdContext';
+import { PeerIdContext } from './PeerIdContext'; 
+import Peer from 'peerjs';
 
 const ChatPage = ({ connectPeerId }) => {
-  const { peerId, connection } = useContext(PeerIdContext);
+  const { peerId, connection, setConnection } = useContext(PeerIdContext);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState('');
   const [file, setFile] = useState(null);
@@ -19,23 +20,20 @@ const ChatPage = ({ connectPeerId }) => {
 
   const handleSendMessage = () => {
     if (message.trim()) {
-      const newMessage = { type: 'text', content: message, sender: peerId };
+      const newMessage = { type: 'text', content: message, sender: 'user' };
       setMessages([...messages, newMessage]);
       setMessage('');
       playSendSound();
       toast.success('Message sent!');
       if (connection) {
-        console.log('Sending message:', newMessage);
         connection.send(newMessage);
-      } else {
-        console.log('No connection established');
       }
     }
   };
 
   const handleReceiveMessage = (newMessage) => {
     setMessages(prevMessages => [...prevMessages, newMessage]);
-    playSendSound();
+    playSendSound(); 
   };
 
   const handleFileChange = (e) => {
@@ -54,13 +52,17 @@ const ChatPage = ({ connectPeerId }) => {
   };
 
   useEffect(() => {
-    if (connection) {
-      connection.on('data', (data) => {
-        console.log('Received message:', data);
-        handleReceiveMessage(data);
+    if (!connection && connectPeerId) {
+      const peer = new Peer(peerId);
+      const conn = peer.connect(connectPeerId);
+      conn.on('open', () => {
+        setConnection(conn);
+        conn.on('data', handleReceiveMessage);
       });
+    } else if (connection) {
+      connection.on('data', handleReceiveMessage);
     }
-  }, [connection]);
+  }, [connectPeerId, connection]);
 
   return (
     <div className="min-h-screen flex flex-col items-center p-8 bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-gray-800 dark:to-gray-900">
@@ -133,7 +135,7 @@ const ChatPage = ({ connectPeerId }) => {
               {messages.map((msg, index) => (
                 <div
                   key={index}
-                  className={`mb-2 p-2 rounded-lg ${msg.sender === peerId ? 'bg-blue-500 text-white ml-auto' : 'bg-gray-300 text-gray-900 mr-auto'}`}
+                  className={`mb-2 p-2 rounded-lg ${msg.sender === 'user' ? 'bg-blue-500 text-white ml-auto' : 'bg-gray-300 text-gray-900 mr-auto'}`}
                   style={{
                     maxWidth: '75%',
                     wordWrap: 'break-word',
@@ -141,7 +143,7 @@ const ChatPage = ({ connectPeerId }) => {
                   }}
                 >
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold">{msg.sender === peerId ? 'You' : 'Peer'}</span>
+                    <span className="text-sm font-semibold">{msg.sender === 'user' ? 'You' : 'Peer'}</span>
                     <span>{msg.type === 'text' ? msg.content : <a href="#" className="text-white underline">{msg.content}</a>}</span>
                   </div>
                 </div>

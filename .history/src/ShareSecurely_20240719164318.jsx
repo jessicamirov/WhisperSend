@@ -3,8 +3,7 @@ import { useContext, useState } from 'preact/hooks';
 import { PeerIdContext } from './PeerIdContext';
 import { route } from 'preact-router';
 import { FaSyncAlt } from 'react-icons/fa';
-import inviteIcon from './assets/send1.png';
-import copyIcon from './assets/copy.png';
+import inviteIcon from './assets/send1.png'; // Adjust the path as needed
 
 const ShareSecurely = () => {
   const { peerId, recalculatePeerId, connectToPeer } = useContext(PeerIdContext);
@@ -19,18 +18,14 @@ const ShareSecurely = () => {
 
     connectToPeer(connectPeerId);
     setErrorMessage('');
-    route(`/chat/${connectPeerId}`);
-  };
-
-  const handleInvite = () => {
-    alert('Invite sent!');
+    route('/chat', { connectPeerId });
   };
 
   const handleCopyPeerId = () => {
     navigator.clipboard.writeText(peerId).then(() => {
-      alert('Peer ID copied to clipboard!');
-    }).catch(err => {
-      console.error('Could not copy text: ', err);
+      alert('Peer ID copied to clipboard');
+    }, (err) => {
+      console.error('Failed to copy text: ', err);
     });
   };
 
@@ -42,9 +37,9 @@ const ShareSecurely = () => {
             <p className="text-lg font-bold text-gray-800 dark:text-gray-200">User's Peer ID:</p>
             <div className="flex items-center space-x-2 bg-gray-700 text-white px-4 py-2 rounded-lg">
               <span className="text-2xl font-bold">{peerId}</span>
-              <img src={inviteIcon} alt="Invite Icon" className="w-6 h-6 cursor-pointer" onClick={handleInvite} />
+              <button onClick={handleCopyPeerId} className="text-white bg-blue-500 rounded-full px-2 py-1 ml-2">Copy</button>
+              <img src={inviteIcon} alt="Invite Icon" className="w-6 h-6 cursor-pointer" />
               <FaSyncAlt className="w-6 h-6 text-yellow-500 cursor-pointer" onClick={recalculatePeerId} />
-              <img src={copyIcon} alt="Copy Icon" className="w-6 h-6 cursor-pointer" onClick={handleCopyPeerId} />
             </div>
           </div>
           <h2 className="text-4xl font-extrabold text-gray-800 dark:text-gray-200 mb-6 text-center">Secure Chat</h2>

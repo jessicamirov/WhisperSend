@@ -19,23 +19,19 @@ const ChatPage = ({ connectPeerId }) => {
 
   const handleSendMessage = () => {
     if (message.trim()) {
-      const newMessage = { type: 'text', content: message, sender: peerId };
-      setMessages([...messages, newMessage]);
+      setMessages([...messages, { type: 'text', content: message, sender: 'user' }]);
+      if (connection) {
+        connection.send({ type: 'text', content: message, sender: 'peer' });
+      }
       setMessage('');
       playSendSound();
       toast.success('Message sent!');
-      if (connection) {
-        console.log('Sending message:', newMessage);
-        connection.send(newMessage);
-      } else {
-        console.log('No connection established');
-      }
     }
   };
 
   const handleReceiveMessage = (newMessage) => {
     setMessages(prevMessages => [...prevMessages, newMessage]);
-    playSendSound();
+    playSendSound(); 
   };
 
   const handleFileChange = (e) => {
@@ -46,7 +42,6 @@ const ChatPage = ({ connectPeerId }) => {
       const confirmEncrypt = window.confirm('Do you want to encrypt the file before sending?');
       if (confirmEncrypt) {
         toast.info('File will be encrypted and sent.');
-        // Add your file encryption logic here
       } else {
         toast.info('File will be sent without encryption.');
       }
@@ -55,10 +50,7 @@ const ChatPage = ({ connectPeerId }) => {
 
   useEffect(() => {
     if (connection) {
-      connection.on('data', (data) => {
-        console.log('Received message:', data);
-        handleReceiveMessage(data);
-      });
+      connection.on('data', handleReceiveMessage);
     }
   }, [connection]);
 
@@ -133,7 +125,7 @@ const ChatPage = ({ connectPeerId }) => {
               {messages.map((msg, index) => (
                 <div
                   key={index}
-                  className={`mb-2 p-2 rounded-lg ${msg.sender === peerId ? 'bg-blue-500 text-white ml-auto' : 'bg-gray-300 text-gray-900 mr-auto'}`}
+                  className={`mb-2 p-2 rounded-lg ${msg.sender === 'user' ? 'bg-blue-500 text-white ml-auto' : 'bg-gray-300 text-gray-900 mr-auto'}`}
                   style={{
                     maxWidth: '75%',
                     wordWrap: 'break-word',
@@ -141,7 +133,7 @@ const ChatPage = ({ connectPeerId }) => {
                   }}
                 >
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold">{msg.sender === peerId ? 'You' : 'Peer'}</span>
+                    <span className="text-sm font-semibold">{msg.sender === 'user' ? 'You' : 'Peer'}</span>
                     <span>{msg.type === 'text' ? msg.content : <a href="#" className="text-white underline">{msg.content}</a>}</span>
                   </div>
                 </div>

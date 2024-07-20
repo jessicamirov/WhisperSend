@@ -3,8 +3,7 @@ import { useContext, useState } from 'preact/hooks';
 import { PeerIdContext } from './PeerIdContext';
 import { route } from 'preact-router';
 import { FaSyncAlt } from 'react-icons/fa';
-import inviteIcon from './assets/send1.png';
-import copyIcon from './assets/copy.png';
+import inviteIcon from './assets/send1.png'; // Adjust the path as needed
 
 const ShareSecurely = () => {
   const { peerId, recalculatePeerId, connectToPeer } = useContext(PeerIdContext);
@@ -26,14 +25,6 @@ const ShareSecurely = () => {
     alert('Invite sent!');
   };
 
-  const handleCopyPeerId = () => {
-    navigator.clipboard.writeText(peerId).then(() => {
-      alert('Peer ID copied to clipboard!');
-    }).catch(err => {
-      console.error('Could not copy text: ', err);
-    });
-  };
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-gray-800 dark:to-gray-900">
       <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-4xl transform transition duration-500 hover:scale-105 mb-8">
@@ -44,7 +35,6 @@ const ShareSecurely = () => {
               <span className="text-2xl font-bold">{peerId}</span>
               <img src={inviteIcon} alt="Invite Icon" className="w-6 h-6 cursor-pointer" onClick={handleInvite} />
               <FaSyncAlt className="w-6 h-6 text-yellow-500 cursor-pointer" onClick={recalculatePeerId} />
-              <img src={copyIcon} alt="Copy Icon" className="w-6 h-6 cursor-pointer" onClick={handleCopyPeerId} />
             </div>
           </div>
           <h2 className="text-4xl font-extrabold text-gray-800 dark:text-gray-200 mb-6 text-center">Secure Chat</h2>

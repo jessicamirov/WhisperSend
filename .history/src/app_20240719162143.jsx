@@ -4,7 +4,7 @@ import Home from './Home';
 import Encrypt from './Encrypt';
 import Decrypt from './Decrypt';
 import ShareSecurely from './ShareSecurely';
-import ChatPage from './ChatPage';
+import ChatPage from './ChatPage'; // Ensure the path is correct
 import { PeerIdProvider } from './PeerIdContext';
 
 const App = () => (

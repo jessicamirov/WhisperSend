@@ -4,7 +4,7 @@ import { PeerIdContext } from './PeerIdContext';
 import { route } from 'preact-router';
 import { FaSyncAlt } from 'react-icons/fa';
 import inviteIcon from './assets/send1.png';
-import copyIcon from './assets/copy.png';
+import copyIcon from './assets/copyIcon.png';
 
 const ShareSecurely = () => {
   const { peerId, recalculatePeerId, connectToPeer } = useContext(PeerIdContext);
