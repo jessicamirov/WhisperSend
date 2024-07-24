@@ -1,0 +1,48 @@
+/* ./src/style/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Parallax Background */
+.parallax {
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
+}
+.step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem; /* 20px */
+  font-weight: bold;
+  color: white;
+  margin-right: 16px;
+}
+.chat-bubble {
+  position: relative;
+  padding: 10px;
+  border-radius: 20px;
+}
+
+.chat-bubble:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 10px;
+  border-width: 10px;
+  border-style: solid;
+  border-color: transparent transparent gray transparent;
+}
+
+.chat-bubble.bg-blue-500:after {
+  border-color: transparent transparent #3b82f6 transparent;
+}
+
