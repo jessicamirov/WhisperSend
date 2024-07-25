@@ -6,7 +6,7 @@ export default function Home() {
     <div>
       <section
         id="home"
-        className="min-h-screen flex flex-col items-center justify-center text-center p-8 bg-gradient-to-r from-blue-500 to-indigo-500 text-white parallax"
+        className="min-h-screen flex flex-col items-center justify-center text-center p-8 bg-gradient-to-r from-blue-500 to-indigo-500 text-blue parallax"
         style={{
           backgroundImage: "url(/path-to-your-background-image.jpg)",
           backgroundSize: "cover",
