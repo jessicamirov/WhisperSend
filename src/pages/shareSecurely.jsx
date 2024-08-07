@@ -1,4 +1,4 @@
-// shareSecurely.jsx
+// src/pages/ShareSecurely.jsx
 import { h } from "preact";
 import { useContext } from "preact/hooks";
 import { PeerIdContext } from "../components/peerIdContext";

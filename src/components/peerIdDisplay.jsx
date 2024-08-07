@@ -1,55 +1,14 @@
-// peerIdDisplay.jsx
-import { h } from "preact";
-import { useContext } from "preact/hooks";
-import { PeerIdContext } from "../components/peerIdContext";
-import { FaSyncAlt } from "react-icons/fa";
-import inviteIcon from "../assets/send1.png";
-import copyIcon from "../assets/copy.png";
+import { useContext } from "preact/hooks"
+import { PeerIdContext } from "./peerIdContext"
 
-export default function PeerIdDisplay({
-  handleInvite,
-  handleCopyPeerId,
-  customStyle,
-  title,
-  showIcons,
-}) {
-  const { peerId, recalculatePeerId } = useContext(PeerIdContext);
+export default function PeerIdDisplay() {
+    const { peerId } = useContext(PeerIdContext)
 
-  return (
-    <div className={`flex flex-col items-center mb-4 ${customStyle}`}>
-      <div className="flex items-center space-x-2 mb-4">
-        <p className="text-lg font-bold text-gray-800 dark:text-gray-200">
-          User's Peer ID:
-        </p>
-        <div className="flex items-center space-x-2 bg-gray-700 text-white px-4 py-2 rounded-lg">
-          <span className="text-2xl font-bold">{peerId}</span>
-          {showIcons && (
-            <>
-              <img
-                src={inviteIcon}
-                alt="Invite Icon"
-                className="w-6 h-6 cursor-pointer"
-                onClick={handleInvite}
-              />
-              <FaSyncAlt
-                className="w-6 h-6 text-yellow-500 cursor-pointer"
-                onClick={recalculatePeerId}
-              />
-              <img
-                src={copyIcon}
-                alt="Copy Icon"
-                className="w-6 h-6 cursor-pointer"
-                onClick={handleCopyPeerId}
-              />
-            </>
-          )}
+    return (
+        <div>
+            <h2>Your Peer ID</h2>
+            <p>{peerId}</p>
         </div>
-      </div>
-      {title && (
-        <h2 className="text-4xl font-extrabold text-gray-800 dark:text-gray-200 mb-6 text-center">
-          {title}
-        </h2>
-      )}
-    </div>
-  );
+    )
 }
+

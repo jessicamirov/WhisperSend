@@ -1,4 +1,3 @@
-import { h } from "preact";
 import IntroductionSection from "../components/introductionSection";
 import FeaturesOverview from "../components/featuresOverview";
 import Recommendations from "../components/recommendations";

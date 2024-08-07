@@ -1,7 +1,11 @@
 import { h } from "preact";
 import { useState } from "preact/hooks";
+import elliptic from "elliptic";
 
 export default function Encrypt() {
+  const EC = elliptic.ec;
+  const ec = new EC("secp256k1");
+
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState("");
   const [isEncrypted, setIsEncrypted] = useState(false);
@@ -12,8 +16,15 @@ export default function Encrypt() {
     setIsEncrypted(false);
   };
 
+  const generateKeys = () => {
+    const keyPair = ec.genKeyPair();
+    const privateKey = "0x" + keyPair.getPrivate().toString("hex");
+    const publicKey = "0x" + keyPair.getPublic().encode("hex");
+    return { privateKey, publicKey };
+  };
+
   const handleEncrypt = () => {
-    // Add your encryption logic here
+    generateKeys();
     setIsEncrypted(true);
     setMessage("File encrypted successfully!");
   };
