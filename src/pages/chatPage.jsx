@@ -11,7 +11,6 @@ import { Buffer } from "buffer"
 
 let encryptFileCounter = 1 // Counter for encrypted files
 
-
 export default function ChatPage({ connectPeerId }) {
     const {
         peer,
@@ -45,7 +44,11 @@ export default function ChatPage({ connectPeerId }) {
                 recipientPeerId,
                 myWallet.privateKey,
             )
-            const encMessage = JSON.stringify({ encrypted, nonce })
+            const encMessage = JSON.stringify({
+                messageType: "text", // הוספת מזהה עבור הודעת טקסט
+                encrypted,
+                nonce,
+            })
             console.log("Sending message:", encMessage)
             connection.send(encMessage)
             setMessages([
@@ -75,67 +78,51 @@ export default function ChatPage({ connectPeerId }) {
         }
     }
 
-    const handleFileChange = async (e) => {
-        const selectedFile = e.target.files[0]
-        if (selectedFile) {
-            const confirmEncrypt = window.confirm(
-                "Do you want to encrypt the file before sending?",
-            )
-            const reader = new FileReader()
-            reader.onload = async (event) => {
-                const fileBuffer = Buffer.from(event.target.result)
-                let encMessage
-                let fileURL
-                let fileName = selectedFile.name
-                if (confirmEncrypt) {
-                    fileName = `encrypted${encryptFileCounter++}${fileName.substring(fileName.lastIndexOf("."))}` // שינוי שם הקובץ המוצפן
-                    encMessage = encryptFile(
-                        fileBuffer,
-                        recipientPeerId,
-                        myWallet.privateKey,
-                    )
-                    toast.info("File will be encrypted and sent.")
-                } else {
-                    encMessage = fileBuffer.toString("hex") // לא מצפין, שולח ישר את הקובץ כ-Hex
-                    toast.info("File will be sent without encryption.")
-                }
-                console.log("Sending file message:", encMessage) // Log the file message being sent
-                connection.send(
-                    JSON.stringify({ type: "file", data: encMessage }),
-                )
-                fileURL = URL.createObjectURL(
-                    new Blob([fileBuffer], {
-                        type: "application/octet-stream",
-                    }),
-                )
-                setMessages([
-                    ...messages,
-                    {
-                        sender: peerId,
-                        content: fileName,
-                        type: "file",
-                        url: fileURL,
-                        encrypted: confirmEncrypt,
-                    },
-                ])
+   const handleFileChange = async (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+        const confirmEncrypt = window.confirm("Do you want to encrypt the file before sending?");
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const fileBuffer = Buffer.from(event.target.result);
+            let encMessage;
+            let fileName = selectedFile.name;
+            if (confirmEncrypt) {
+                fileName = `encrypted${encryptFileCounter++}${fileName.substring(fileName.lastIndexOf('.'))}`;
+                encMessage = encryptFile(fileBuffer, recipientPeerId, myWallet.privateKey);
+            } else {
+                encMessage = fileBuffer.toString('hex');
             }
-            reader.readAsArrayBuffer(selectedFile)
-        }
+
+            // הוספת מזהה עבור קובץ
+            connection.send(JSON.stringify({
+                messageType: "file",
+                data: encMessage,
+                fileName: fileName,
+            }));
+
+            const fileURL = URL.createObjectURL(new Blob([fileBuffer], { type: "application/octet-stream" }));
+            setMessages([...messages, { sender: peerId, content: fileName, type: "file", url: fileURL, encrypted: confirmEncrypt }]);
+        };
+        reader.readAsArrayBuffer(selectedFile);
     }
+};
+
 
     const handleReceiveFile = (data) => {
         console.log("Received file:", data)
         let fileURL
-        let fileName = `received_file_${Date.now()}`
+        let fileName = data.fileName || `received_file_${Date.now()}`
         let encrypted = false
 
+        // בדיקה אם הקובץ מוצפן או לא
         if (
-            typeof data === "string" &&
-            data.length % 2 === 0 &&
-            /^[0-9a-f]+$/i.test(data)
+            typeof data.data === "string" &&
+            data.data.length % 2 === 0 &&
+            /^[0-9a-f]+$/i.test(data.data)
         ) {
             // הקובץ לא מוצפן, שולח כ-Hex
-            const fileBuffer = Buffer.from(data, "hex")
+            const fileBuffer = Buffer.from(data.data, "hex")
             const blob = new Blob([fileBuffer], {
                 type: "application/octet-stream",
             })
@@ -143,7 +130,7 @@ export default function ChatPage({ connectPeerId }) {
             toast.success("File received!")
         } else {
             // הקובץ מוצפן
-            const parsedData = JSON.parse(data)
+            const parsedData = JSON.parse(data.data)
             const { nonce, encrypted: encryptedData } = parsedData
 
             if (!nonce || !encryptedData) {
@@ -162,12 +149,13 @@ export default function ChatPage({ connectPeerId }) {
             encrypted = true
             toast.success("Encrypted file received!")
 
+            // מניעה של קריאה כפולה לפענוח
             const confirmDecrypt = window.confirm(
                 "Do you want to decrypt the file?",
             )
             if (confirmDecrypt) {
                 const decryptedFileURL = decryptFile(
-                    data,
+                    data.data,
                     recipientPeerId,
                     myWallet.privateKey,
                 )
@@ -177,20 +165,30 @@ export default function ChatPage({ connectPeerId }) {
                     toast.success("File decrypted!")
                 } else {
                     toast.error("File decryption failed.")
+                    return // לא מוסיף את הקובץ אם הפענוח נכשל
                 }
+            } else {
+                // אם המשתמש בוחר לא לפענח, נשאיר את שם הקובץ כמו שהוא
+                fileName = data.fileName
             }
         }
 
-        setMessages((prevMessages) => [
-            ...prevMessages,
-            {
-                sender: "Peer",
-                content: fileName,
-                type: "file",
-                url: fileURL,
-                encrypted: encrypted,
-            },
-        ])
+        // ודא שהקובץ לא נוסף פעמיים לרשימת ההודעות
+        const fileAlreadyExists = messages.some(
+            (msg) => msg.content === fileName && msg.type === "file",
+        )
+        if (!fileAlreadyExists) {
+            setMessages((prevMessages) => [
+                ...prevMessages,
+                {
+                    sender: "Peer",
+                    content: fileName,
+                    type: "file",
+                    url: fileURL,
+                    encrypted: encrypted,
+                },
+            ])
+        }
     }
 
     useEffect(() => {
@@ -199,7 +197,7 @@ export default function ChatPage({ connectPeerId }) {
                 try {
                     const parsedData = JSON.parse(data)
                     if (parsedData.type === "file") {
-                        handleReceiveFile(parsedData.data)
+                        handleReceiveFile(parsedData)
                     } else {
                         handleReceiveMessage(data)
                     }
@@ -255,4 +253,3 @@ export default function ChatPage({ connectPeerId }) {
         </ChatLayout>
     )
 }
-
