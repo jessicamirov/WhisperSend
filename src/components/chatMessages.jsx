@@ -1,35 +1,17 @@
-import { useContext } from "preact/hooks"
-import { PeerIdContext } from "./peerIdContext"
+import { useContext } from "preact/hooks";
+import { PeerIdContext } from "./peerIdContext"; // ייבוא הקונטקסט
 
 export default function ChatMessages() {
-    const { messages, peerId } = useContext(PeerIdContext)
-    // הקוד הקיים שלך...
+    const { messages, peerId } = useContext(PeerIdContext); // שימוש בקונטקסט
 
-    const handleDecryptAndDownload = (msg) => {
-        console.log("Decrypting file:", msg.content)
-
-        const decryptedFileURL = decryptFile(
-            msg.url,
-            recipientPeerId,
-            myWallet.privateKey,
-        )
-        if (decryptedFileURL) {
-            const fileName = msg.content.replace("encrypted", "decrypted") // שינוי שם הקובץ המפוענח
-
-            // יצירת אלמנט <a> דינמי להורדה
-            const link = document.createElement("a")
-            link.href = decryptedFileURL
-            link.download = fileName
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link) // הסרת האלמנט לאחר ההורדה
-
-            toast.success("File decrypted and downloading...")
-        } else {
-            toast.error("File decryption failed.")
-        }
-    }
-
+    const handleDownload = (msg) => {
+        const link = document.createElement("a");
+        link.href = msg.url; // השתמש ב-URL שכבר קיים
+        link.download = msg.content; // שם הקובץ להורדה
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     return (
         <div className="bg-gray-100 dark:bg-gray-700 rounded-xl p-4 overflow-y-auto h-96 mb-4">
@@ -63,37 +45,12 @@ export default function ChatMessages() {
                                             : "(Received)"}
                                     </a>
                                     {msg.sender !== peerId && (
-                                        <>
-                                            {msg.encrypted ? (
-                                                <button
-                                                    onClick={() =>
-                                                        handleDecryptAndDownload(
-                                                            msg,
-                                                        )
-                                                    }
-                                                    className="ml-2 bg-green-500 text-white py-1 px-2 rounded"
-                                                >
-                                                    Decrypt and Download
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    onClick={() =>
-                                                        window.open(
-                                                            msg.url,
-                                                            "_blank",
-                                                        )
-                                                    }
-                                                    className="ml-2 bg-green-500 text-white py-1 px-2 rounded"
-                                                >
-                                                    Download
-                                                </button>
-                                            )}
-                                            {msg.encrypted && (
-                                                <span className="text-white ml-2">
-                                                    (Encrypted)
-                                                </span>
-                                            )}
-                                        </>
+                                        <button
+                                            onClick={() => handleDownload(msg)}
+                                            className="ml-2 bg-green-500 text-white py-1 px-2 rounded"
+                                        >
+                                            Download
+                                        </button>
                                     )}
                                 </>
                             )}
@@ -102,5 +59,5 @@ export default function ChatMessages() {
                 </div>
             ))}
         </div>
-    )
+    );
 }

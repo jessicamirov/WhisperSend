@@ -6,6 +6,7 @@ import nacl from "tweetnacl"
 import { Buffer } from "buffer"
 import elliptic from "elliptic"
 import { toast } from "react-toastify"
+import { peerConfig } from "../utils/config"
 const ec = elliptic.ec
 
 export const PeerIdContext = createContext()
@@ -273,7 +274,6 @@ export const PeerIdProvider = ({ children }) => {
     useEffect(() => {
         const newWallet = ethers.Wallet.createRandom()
         const { publicKey, privateKey } = newWallet
-        console.log("Wallet:", { publicKey, privateKey })
         setMyWallet(newWallet)
         setPeerId(publicKey) // Set the peer ID
     }, [])
@@ -281,14 +281,12 @@ export const PeerIdProvider = ({ children }) => {
     useEffect(() => {
         if (!myWallet) return
 
-        const pr = new Peer(myWallet.publicKey)
+        const pr = new Peer(myWallet.publicKey, peerConfig)
         setPeer(pr)
-
-        pr.on("open", (id) => {
-            console.log("My peer ID is: " + id)
-            setPeerId(id)
-        })
-
+        // pr.on("open", (id) => {
+        //     console.log("My peer ID is: " + id)
+        //     setPeerId(id)
+        // })
         return () => {
             pr.destroy()
         }
@@ -296,6 +294,7 @@ export const PeerIdProvider = ({ children }) => {
 
     useEffect(() => {
         if (!peer) return
+        // listen for incoming connections
         peer.on("connection", (con) => {
             console.log("Connection received")
             con.on("open", () => {
@@ -320,6 +319,16 @@ export const PeerIdProvider = ({ children }) => {
         })
     }, [connection])
 
+    const connectRecipient = (e) => {
+        e.preventDefault()
+        if (connection) {
+            disconnect()
+        } else {
+            connect(recipient)
+            setRecipientPeerId(recipient)
+        }
+    }
+
     const connectToPeer = (recId) => {
         const con = peer.connect(recId)
         setConnection(con)
@@ -338,27 +347,26 @@ export const PeerIdProvider = ({ children }) => {
         setMessage("")
     }
 
-  const handleData = (data) => {
-    console.log("handleData called with:", data);
+    const handleData = (data) => {
+        console.log("handleData called with:", data)
 
-    try {
-        const parsedData = JSON.parse(data);
+        try {
+            const parsedData = JSON.parse(data)
 
-        if (parsedData.messageType === "file") {
-            console.log("File received in handleData:", parsedData.fileName);
-            handleReceiveFile(parsedData);
-        } else if (parsedData.messageType === "text") {
-            console.log("Text received in handleData");
-            handleReceiveMessage(data);
-        } else {
-            console.log("Unknown messageType received in handleData");
+            if (parsedData.messageType === "file") {
+                console.log("File received in handleData:", parsedData.fileName)
+                handleReceiveFile(parsedData)
+            } else if (parsedData.messageType === "text") {
+                console.log("Text received in handleData")
+                handleReceiveMessage(data)
+            } else {
+                console.log("Unknown messageType received in handleData")
+            }
+        } catch (error) {
+            console.log("Text received that is not JSON in handleData")
+            handleReceiveMessage(data)
         }
-    } catch (error) {
-        console.log("Text received that is not JSON in handleData");
-        handleReceiveMessage(data);
     }
-};
-
 
     const handleReceiveMessage = (data) => {
         console.log("Received message:", data)
@@ -381,6 +389,7 @@ export const PeerIdProvider = ({ children }) => {
             value={{
                 peer,
                 connectToPeer,
+                connectRecipient,
                 disconnect,
                 connection,
                 recipient,
