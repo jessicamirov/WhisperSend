@@ -1,11 +1,22 @@
+import { useContext } from "preact/hooks"
 import { FaPaperclip, FaSmile } from "react-icons/fa"
+import { handleSendMessage, handleSendFile } from "../utils/chatActions"
+import { PeerIdContext } from "../components/peerIdContext"
 
-export default function MessageInput({
-    message,
-    setMessage,
-    handleSendMessage,
-    handleFileChange,
-}) {
+export default function MessageInput() {
+    const {
+        connection,
+        messages,
+        setMessages,
+        message,
+        setMessage,
+        myWallet,
+        encryptText,
+        encryptFile,
+        peerId,
+        recipientPeerId,
+    } = useContext(PeerIdContext)
+
     return (
         <div className="flex items-center space-x-4">
             <input
@@ -23,11 +34,34 @@ export default function MessageInput({
                 id="fileInput"
                 type="file"
                 style={{ display: "none" }}
-                onChange={handleFileChange}
+                onChange={(e) =>
+                    handleSendFile({
+                        e,
+                        connection,
+                        encryptFile,
+                        recipientPeerId,
+                        myWallet,
+                        peerId,
+                        setMessages,
+                        messages,
+                    })
+                }
             />
             <FaSmile className="w-6 h-6 text-gray-500 cursor-pointer" />
             <button
-                onClick={handleSendMessage}
+                onClick={() =>
+                    handleSendMessage({
+                        message,
+                        connection,
+                        encryptText,
+                        recipientPeerId,
+                        messages,
+                        myWallet,
+                        peerId,
+                        setMessages,
+                        setMessage,
+                    })
+                }
                 className="px-4 py-3 bg-blue-500 text-white font-bold rounded-lg shadow-lg hover:bg-blue-600 transition duration-300"
             >
                 Send
