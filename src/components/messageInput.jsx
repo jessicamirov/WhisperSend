@@ -11,8 +11,6 @@ export default function MessageInput() {
         message,
         setMessage,
         myWallet,
-        encryptText,
-        encryptFile,
         peerId,
         recipientPeerId,
     } = useContext(PeerIdContext)
@@ -38,7 +36,6 @@ export default function MessageInput() {
                     handleSendFile({
                         e,
                         connection,
-                        encryptFile,
                         recipientPeerId,
                         myWallet,
                         peerId,
@@ -53,7 +50,6 @@ export default function MessageInput() {
                     handleSendMessage({
                         message,
                         connection,
-                        encryptText,
                         recipientPeerId,
                         messages,
                         myWallet,

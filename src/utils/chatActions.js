@@ -1,8 +1,12 @@
 import { toast } from "react-toastify"
+import {
+    encryptText,
+    encryptFile,
+    decryptText,
+    decryptFile,
+} from "./encryption"
 import sendSound from "../assets/whisper.mp3"
 import { Buffer } from "buffer"
-
-//handle all traffic into the chat page
 
 let encryptFileCounter = 1 // Counter for encrypted files
 
@@ -14,7 +18,6 @@ export const playSendSound = () => {
 export const handleSendMessage = ({
     message,
     connection,
-    encryptText,
     recipientPeerId,
     messages,
     myWallet,
@@ -29,7 +32,7 @@ export const handleSendMessage = ({
             myWallet.privateKey,
         )
         const encMessage = JSON.stringify({
-            messageType: "text", // הוספת מזהה עבור הודעת טקסט
+            messageType: "text",
             encrypted,
             nonce,
         })
@@ -48,7 +51,6 @@ export const handleSendMessage = ({
 export const handleSendFile = async ({
     e,
     connection,
-    encryptFile,
     recipientPeerId,
     myWallet,
     peerId,
@@ -76,7 +78,6 @@ export const handleSendFile = async ({
                 encMessage = fileBuffer.toString("hex")
             }
 
-            // הוספת מזהה עבור קובץ
             connection.send(
                 JSON.stringify({
                     messageType: "file",
@@ -102,5 +103,203 @@ export const handleSendFile = async ({
             ])
         }
         reader.readAsArrayBuffer(selectedFile)
+    }
+}
+
+export const handleReceiveMessage = (
+    setMessages,
+    privateKey,
+    recipientPeerId,
+    data,
+) => {
+    const decryptedMessage = decryptText(data, recipientPeerId, privateKey)
+    console.log("Decrypted message:", decryptedMessage)
+    if (decryptedMessage !== "error") {
+        setMessages((prevMessages) => [
+            ...prevMessages,
+            { sender: "Peer", content: decryptedMessage, type: "text" },
+        ])
+    }
+}
+
+// export const handleReceiveFile = (
+//     messages,
+//     setMessages,
+//     privateKey,
+//     recipientPeerId,
+//     data,
+// ) => {
+//     console.log("handleReceiveFile called with:", data)
+//     let fileURL
+//     let fileName = data.fileName
+//     let encrypted = false
+
+//     if (!fileName) {
+//         console.error("Received file without a valid name.")
+//         return
+//     }
+
+//     if (
+//         typeof data.data === "string" &&
+//         data.data.length % 2 === 0 &&
+//         /^[0-9a-f]+$/i.test(data.data)
+//     ) {
+//         console.log("Processing unencrypted file:", fileName)
+//         const fileBuffer = Buffer.from(data.data, "hex")
+//         const blob = new Blob([fileBuffer], {
+//             type: "application/octet-stream",
+//         })
+//         fileURL = URL.createObjectURL(blob)
+//         toast.success("File received!")
+//     } else {
+//         console.log("Processing encrypted file:", fileName)
+//         const parsedData = JSON.parse(data.data)
+//         const { nonce, encrypted: encryptedData } = parsedData
+
+//         if (!nonce || !encryptedData) {
+//             console.error(
+//                 "Invalid nonce or encrypted data:",
+//                 nonce,
+//                 encryptedData,
+//             )
+//             return
+//         }
+
+//         const fileBuffer = Buffer.from(encryptedData, "hex")
+//         fileURL = URL.createObjectURL(
+//             new Blob([fileBuffer], { type: "application/octet-stream" }),
+//         )
+//         encrypted = true
+//         toast.success("Encrypted file received!")
+
+//         const confirmDecrypt = window.confirm(
+//             "Do you want to decrypt the file?",
+//         )
+//         if (confirmDecrypt) {
+//             console.log("User chose to decrypt the file:", fileName)
+//             const decryptedFileURL = decryptFile(
+//                 data.data,
+//                 recipientPeerId,
+//                 privateKey,
+//             )
+//             if (decryptedFileURL) {
+//                 fileURL = decryptedFileURL
+//                 fileName = fileName.replace("encrypted", "decrypted")
+//                 toast.success("File decrypted!")
+//             } else {
+//                 console.error("File decryption failed.")
+//                 return
+//             }
+//         }
+//     }
+
+//     const fileAlreadyExists = messages.some(
+//         (msg) => msg.content === fileName && msg.type === "file",
+//     )
+//     if (!fileAlreadyExists) {
+//         setMessages((prevMessages) => [
+//             ...prevMessages,
+//             {
+//                 sender: "Peer",
+//                 content: fileName,
+//                 type: "file",
+//                 url: fileURL,
+//                 encrypted: encrypted,
+//             },
+//         ])
+//     }
+// }
+
+export const handleReceiveFile = (
+    messages,
+    setMessages,
+    privateKey,
+    recipientPeerId,
+    data,
+) => {
+    console.log("handleReceiveFile called with:", data)
+    let fileURL
+    let fileName = data.fileName
+    let encrypted = false
+
+    if (!fileName) {
+        console.error("Received file without a valid name.")
+        return
+    }
+
+    if (
+        typeof data.data === "string" &&
+        data.data.length % 2 === 0 &&
+        /^[0-9a-f]+$/i.test(data.data)
+    ) {
+        console.log("Processing unencrypted file:", fileName)
+        const fileBuffer = Buffer.from(data.data, "hex")
+        const blob = new Blob([fileBuffer], {
+            type: "application/octet-stream",
+        })
+        fileURL = URL.createObjectURL(blob)
+        toast.success("File received!")
+    } else {
+        console.log("Processing encrypted file:", fileName)
+        const parsedData = JSON.parse(data.data)
+        const { nonce, encrypted: encryptedData } = parsedData
+
+        if (!nonce || !encryptedData) {
+            console.error(
+                "Invalid nonce or encrypted data:",
+                nonce,
+                encryptedData,
+            )
+            return
+        }
+
+        const fileBuffer = Buffer.from(encryptedData, "hex")
+        fileURL = URL.createObjectURL(
+            new Blob([fileBuffer], { type: "application/octet-stream" }),
+        )
+        encrypted = true
+        toast.success("Encrypted file received!")
+
+        // בדוק אם הדף פעיל
+        if (document.visibilityState === "visible") {
+            const confirmDecrypt = window.confirm(
+                "Do you want to decrypt the file?",
+            )
+            if (confirmDecrypt) {
+                console.log("User chose to decrypt the file:", fileName)
+                const decryptedFileURL = decryptFile(
+                    data.data,
+                    recipientPeerId,
+                    privateKey,
+                )
+                if (decryptedFileURL) {
+                    fileURL = decryptedFileURL
+                    fileName = fileName.replace("encrypted", "decrypted")
+                    toast.success("File decrypted!")
+                } else {
+                    console.error("File decryption failed.")
+                    return
+                }
+            }
+        } else {
+            console.warn("Page is not visible; skipping window.confirm()")
+            // ניתן לשמור את המידע הזה כדי לטפל בו מאוחר יותר, כאשר הדף יחזור להיות פעיל
+        }
+    }
+
+    const fileAlreadyExists = messages.some(
+        (msg) => msg.content === fileName && msg.type === "file",
+    )
+    if (!fileAlreadyExists) {
+        setMessages((prevMessages) => [
+            ...prevMessages,
+            {
+                sender: "Peer",
+                content: fileName,
+                type: "file",
+                url: fileURL,
+                encrypted: encrypted,
+            },
+        ])
     }
 }
