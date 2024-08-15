@@ -187,9 +187,6 @@ export const PeerIdProvider = ({ children }) => {
             console.error("Received file without a valid name.")
             return // אין מה לעשות אם אין שם קובץ, לא מוסיפים אותו לרשימה
         }
-
-        console.log("Processing file:", fileName)
-
         if (
             typeof data.data === "string" &&
             data.data.length % 2 === 0 &&
@@ -245,19 +242,15 @@ export const PeerIdProvider = ({ children }) => {
                 }
             } else {
                 console.log("User chose not to decrypt the file:", fileName)
+                // אם המשתמש בוחר לא לפענח, נשאיר את שם הקובץ כמו שהוא
+                fileName = data.fileName
             }
         }
 
         const fileAlreadyExists = messages.some(
             (msg) => msg.content === fileName && msg.type === "file",
         )
-        if (fileAlreadyExists) {
-            console.log(
-                "File already exists in messages, not adding again:",
-                fileName,
-            )
-        } else {
-            console.log("Adding file to messages:", fileName)
+        if (!fileAlreadyExists) {
             setMessages((prevMessages) => [
                 ...prevMessages,
                 {
@@ -283,10 +276,6 @@ export const PeerIdProvider = ({ children }) => {
 
         const pr = new Peer(myWallet.publicKey, peerConfig)
         setPeer(pr)
-        // pr.on("open", (id) => {
-        //     console.log("My peer ID is: " + id)
-        //     setPeerId(id)
-        // })
         return () => {
             pr.destroy()
         }
