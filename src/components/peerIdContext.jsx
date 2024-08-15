@@ -358,7 +358,6 @@ export const PeerIdProvider = ({ children }) => {
     }
 
     const handleReceiveMessage = (data) => {
-        console.log("Received message:", data)
         const decryptedMessage = decryptText(
             data,
             recipientPeerId,
