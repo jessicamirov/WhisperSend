@@ -3,6 +3,13 @@ import { Buffer } from "buffer"
 import elliptic from "elliptic"
 const ec = elliptic.ec
 
+/**
+ * Derives a shared secret using elliptic curve Diffie-Hellman (ECDH).
+ *
+ * @param {string} publicKeyHex - The recipient's public key in hexadecimal format.
+ * @param {string} privateKeyHex - The sender's private key in hexadecimal format.
+ * @returns {Buffer} The derived shared secret as a buffer.
+ */
 const getSharedSecret = (publicKeyHex, privateKeyHex) => {
     const secp256k1 = new ec("secp256k1")
     const senderEcKey = secp256k1.keyFromPrivate(privateKeyHex.slice(2), "hex")
@@ -11,6 +18,14 @@ const getSharedSecret = (publicKeyHex, privateKeyHex) => {
     return Buffer.from(sharedSecret.toArray("be", 32))
 }
 
+/**
+ * Encrypts a text message using NaCl's box method with a shared secret.
+ *
+ * @param {string} text - The text message to encrypt.
+ * @param {string} recipientPublicKey - The recipient's public key in hexadecimal format.
+ * @param {string} senderPrivateKey - The sender's private key in hexadecimal format.
+ * @returns {Object} An object containing the nonce and encrypted message as hexadecimal strings.
+ */
 export const encryptText = (text, recipientPublicKey, senderPrivateKey) => {
     const sharedSecret = getSharedSecret(recipientPublicKey, senderPrivateKey)
     const nonce = nacl.randomBytes(24)
@@ -22,6 +37,14 @@ export const encryptText = (text, recipientPublicKey, senderPrivateKey) => {
     }
 }
 
+/**
+ * Decrypts a text message encrypted with NaCl's box method.
+ *
+ * @param {string} encryptedMessage - The encrypted message as a hexadecimal string.
+ * @param {string} senderPublicKey - The sender's public key in hexadecimal format.
+ * @param {string} recipientPrivateKey - The recipient's private key in hexadecimal format.
+ * @returns {string} The decrypted message, or "error" if decryption fails.
+ */
 export const decryptText = (
     encryptedMessage,
     senderPublicKey,
@@ -49,9 +72,6 @@ export const decryptText = (
             return "error"
         }
 
-        console.log("nonce:", nonce) // Log the nonce
-        console.log("encrypted:", encrypted) // Log the encrypted data
-
         const decrypted = nacl.box.open.after(
             Uint8Array.from(Buffer.from(encrypted, "hex")),
             Uint8Array.from(Buffer.from(nonce, "hex")),
@@ -60,7 +80,7 @@ export const decryptText = (
 
         if (decrypted) {
             const decryptedMessage = Buffer.from(decrypted).toString()
-            console.log("Decrypted message:", decryptedMessage) // Log the decrypted message
+            console.log("Decrypted message:", decryptedMessage)
             return decryptedMessage
         } else {
             console.error(
@@ -74,6 +94,14 @@ export const decryptText = (
     }
 }
 
+/**
+ * Encrypts a file using NaCl's box method with a shared secret.
+ *
+ * @param {Buffer} fileBuffer - The file data to encrypt as a buffer.
+ * @param {string} recipientPublicKey - The recipient's public key in hexadecimal format.
+ * @param {string} senderPrivateKey - The sender's private key in hexadecimal format.
+ * @returns {string} A JSON string containing the nonce and encrypted file data as hexadecimal strings.
+ */
 export const encryptFile = (
     fileBuffer,
     recipientPublicKey,
@@ -96,6 +124,14 @@ export const encryptFile = (
     return JSON.stringify(encryptedObj)
 }
 
+/**
+ * Decrypts a file encrypted with NaCl's box method.
+ *
+ * @param {string} encryptedMessage - The encrypted file data as a JSON string or hexadecimal string.
+ * @param {string} senderPublicKey - The sender's public key in hexadecimal format.
+ * @param {string} recipientPrivateKey - The recipient's private key in hexadecimal format.
+ * @returns {string|null} A URL pointing to the decrypted file, or null if decryption fails.
+ */
 export const decryptFile = (
     encryptedMessage,
     senderPublicKey,
@@ -116,9 +152,6 @@ export const decryptFile = (
             senderPublicKey,
             recipientPrivateKey,
         )
-
-        console.log("nonce:", nonce) // Log the nonce
-        console.log("encrypted:", encrypted) // Log the encrypted data
 
         const decrypted = nacl.box.open.after(
             Uint8Array.from(Buffer.from(encrypted, "hex")),

@@ -3,10 +3,14 @@ import { useState, useEffect } from "preact/hooks"
 import Peer from "peerjs"
 import { handleReceiveMessage, handleReceiveFile } from "../utils/chatActions"
 import { peerConfig } from "../utils/config"
-import { ethers } from "ethers" // ייבוא ספריית ethers
+import { ethers } from "ethers"
 
 export const PeerIdContext = createContext()
 
+/**
+ * Provides the PeerJS and messaging context for the application.
+ * Manages peer-to-peer connections, wallet generation, and message handling.
+ */
 export const PeerIdProvider = ({ children }) => {
     const [peer, setPeer] = useState(null)
     const [connection, setConnection] = useState(null)
@@ -17,13 +21,20 @@ export const PeerIdProvider = ({ children }) => {
     const [recipientPeerId, setRecipientPeerId] = useState("")
     const [peerId, setPeerId] = useState("")
 
+    /**
+     * Generates a new Ethereum wallet and sets the peer ID to the wallet's public key.
+     */
     useEffect(() => {
         const newWallet = ethers.Wallet.createRandom()
         const { publicKey, privateKey } = newWallet
         setMyWallet(newWallet)
-        setPeerId(publicKey) // Set the peer ID
+        setPeerId(publicKey)
     }, [])
 
+    /**
+     * Initializes the PeerJS peer with the generated public key.
+     * Destroys the peer on component unmount.
+     */
     useEffect(() => {
         if (!myWallet) return
 
@@ -34,6 +45,10 @@ export const PeerIdProvider = ({ children }) => {
         }
     }, [myWallet])
 
+    /**
+     * Sets up connection event listeners on the peer instance.
+     * Handles incoming connections and sets up the connection state.
+     */
     useEffect(() => {
         if (!peer) return
 
@@ -48,6 +63,10 @@ export const PeerIdProvider = ({ children }) => {
         })
     }, [peer])
 
+    /**
+     * Sets up data, close, and error event listeners on the connection.
+     * Handles incoming data and manages connection state on close or error.
+     */
     useEffect(() => {
         if (!connection) return
 
@@ -62,6 +81,10 @@ export const PeerIdProvider = ({ children }) => {
         })
     }, [connection])
 
+    /**
+     * Connects to the recipient peer or disconnects if already connected.
+     * @param {Event} e - The event triggered by a form submission or button click.
+     */
     const connectRecipient = (e) => {
         e.preventDefault()
         if (connection) {
@@ -72,6 +95,10 @@ export const PeerIdProvider = ({ children }) => {
         }
     }
 
+    /**
+     * Establishes a connection to a specific peer ID.
+     * @param {string} recId - The peer ID to connect to.
+     */
     const connectToPeer = (recId) => {
         const con = peer.connect(recId)
         setConnection(con)
@@ -79,6 +106,9 @@ export const PeerIdProvider = ({ children }) => {
         console.log("Connection established - sender")
     }
 
+    /**
+     * Disconnects the current connection and resets the related state.
+     */
     const disconnect = () => {
         if (connection) {
             connection.close()
@@ -90,6 +120,11 @@ export const PeerIdProvider = ({ children }) => {
         setMessage("")
     }
 
+    /**
+     * Handles incoming data on the connection.
+     * Parses the data and delegates it to the appropriate handler based on message type.
+     * @param {any} data - The data received from the peer connection.
+     */
     const handleData = (data) => {
         try {
             const parsedData = JSON.parse(data)

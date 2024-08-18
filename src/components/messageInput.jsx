@@ -3,6 +3,11 @@ import { FaPaperclip, FaSmile } from "react-icons/fa"
 import { handleSendMessage, handleSendFile } from "../utils/chatActions"
 import { PeerIdContext } from "../components/peerIdContext"
 
+/**
+ * MessageInput component for the chat.
+ * Allows users to input text messages, send files, and utilize icons for additional actions.
+ */
+
 export default function MessageInput() {
     const {
         connection,
