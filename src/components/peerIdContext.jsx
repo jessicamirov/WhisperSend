@@ -3,7 +3,7 @@ import { useState, useEffect } from "preact/hooks"
 import Peer from "peerjs"
 import { handleReceiveMessage, handleReceiveFile } from "../utils/chatActions"
 import { peerConfig } from "../utils/config"
-import { ethers } from "ethers"
+import { ethers, Mnemonic } from "ethers"
 
 export const PeerIdContext = createContext()
 
@@ -26,7 +26,8 @@ export const PeerIdProvider = ({ children }) => {
      */
     useEffect(() => {
         const newWallet = ethers.Wallet.createRandom()
-        const { publicKey, privateKey } = newWallet
+        const { publicKey, privateKey, mnemonic } = newWallet
+        console.log("mnamonic1:",{ mnamonic: mnemonic.phrase })
         setMyWallet(newWallet)
         setPeerId(publicKey)
     }, [])
