@@ -17,8 +17,8 @@ export const PeerIdProvider = ({ children }) => {
     const [myWallet, setMyWallet] = useState(null);
     const [recipientPeerId, setRecipientPeerId] = useState("");
     const [peerId, setPeerId] = useState("");
-    const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const [confirmCallback, setConfirmCallback] = useState(null);
+    const [showDecryptModal, setShowDecryptModal] = useState(false);
+    const [decryptCallback, setDecryptCallback] = useState(null);
     const [confirmModalData, setConfirmModalData] = useState({ title: "", message: "" });
 
     useEffect(() => {
@@ -99,17 +99,17 @@ export const PeerIdProvider = ({ children }) => {
 
     const openConfirmModal = (title, message) => {
         return new Promise((resolve) => {
-            setConfirmCallback(() => resolve);
+            setDecryptCallback(() => resolve);
             setConfirmModalData({ title, message });
-            setShowConfirmModal(true);
+            setShowDecryptModal(true);
         });
     };
 
     const closeConfirmModal = (confirmed) => {
-        setShowConfirmModal(false);
+        setShowDecryptModal(false);
 
-        if (confirmCallback) {
-            confirmCallback(confirmed);
+        if (decryptCallback) {
+            decryptCallback(confirmed);
         }
     };
 
@@ -168,7 +168,7 @@ export const PeerIdProvider = ({ children }) => {
             }}
         >
             {children}
-            {showConfirmModal && (
+            {showDecryptModal && (
                 <ConfirmModal
                     title={confirmModalData.title}
                     message={confirmModalData.message}

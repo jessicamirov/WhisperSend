@@ -1,11 +1,11 @@
 import React from "preact/compat";
 
-export default function DecryptModal({ onConfirm, onCancel }) {
+export default function ConfirmModal({ title, message, onConfirm, onCancel }) {
     return (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg">
-                <h2 className="text-2xl font-bold mb-4">Decrypt File</h2>
-                <p className="mb-6">Do you want to decrypt the received file?</p>
+                <h2 className="text-2xl font-bold mb-4">{title}</h2>
+                <p className="mb-6">{message}</p>
                 <div className="flex justify-end space-x-4">
                     <button
                         onClick={() => onCancel(false)}
@@ -17,7 +17,7 @@ export default function DecryptModal({ onConfirm, onCancel }) {
                         onClick={() => onConfirm(true)}
                         className="px-4 py-2 bg-blue-500 text-white rounded-lg"
                     >
-                        Decrypt
+                        Confirm
                     </button>
                 </div>
             </div>

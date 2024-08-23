@@ -93,7 +93,7 @@ export const handleSendFile = async ({
 
             const fileURL = URL.createObjectURL(
                 new Blob([encMessage], {
-                    type: confirmEncrypt ? "text/plain" : selectedFile.type
+                    type: "text/plain"
                 })
             );
 
@@ -115,6 +115,9 @@ export const handleSendFile = async ({
         e.target.value = null;
     }
 };
+
+
+
 
 export const handleReceiveMessage = (
     setMessages,
@@ -139,7 +142,7 @@ export const handleReceiveFile = async (
     privateKey,
     recipientPeerId,
     data,
-    openConfirmModal
+    openDecryptModal
 ) => {
     let fileURL;
     let fileName = data.fileName;
@@ -168,10 +171,7 @@ export const handleReceiveFile = async (
         encrypted = true;
         toast.success("Encrypted file received!");
 
-        const shouldDecrypt = await openConfirmModal(
-            "Decrypt File",
-            "Do you want to decrypt the received file?"
-        );
+        const shouldDecrypt = await openDecryptModal();
 
         if (shouldDecrypt) {
             const decryptedBlob = decryptFile(data.data, recipientPeerId, privateKey);
