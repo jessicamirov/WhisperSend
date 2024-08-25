@@ -1,24 +1,29 @@
-import { useContext } from "preact/hooks";
-import { PeerIdContext } from "./peerIdContext"; // ייבוא הקונטקסט
+import { useContext } from "preact/hooks"
+import { Context } from "../utils/context" // ייבוא הקונטקסט המרכזי
 
 export default function ChatMessages() {
-    const { messages, peerId } = useContext(PeerIdContext); // שימוש בקונטקסט
+    const { state } = useContext(Context) // שימוש בקונטקסט המעודכן
+    const { messages, peerId } = state // גישה ל-messages ול-peerId מה-state
 
     const handleDownload = (msg) => {
-        const link = document.createElement("a");
-        link.href = msg.url; // השתמש ב-URL שכבר קיים
-        link.download = msg.content; // שם הקובץ להורדה
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
+        const link = document.createElement("a")
+        link.href = msg.url // השתמש ב-URL שכבר קיים
+        link.download = msg.content // שם הקובץ להורדה
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+    }
 
     return (
         <div className="bg-gray-100 dark:bg-gray-700 rounded-xl p-4 overflow-y-auto h-96 mb-4">
             {messages.map((msg, index) => (
                 <div
                     key={index}
-                    className={`mb-2 p-2 rounded-lg ${msg.sender === peerId ? "bg-blue-500 text-white ml-auto" : "bg-gray-300 text-gray-900 mr-auto"}`}
+                    className={`mb-2 p-2 rounded-lg ${
+                        msg.sender === peerId
+                            ? "bg-blue-500 text-white ml-auto"
+                            : "bg-gray-300 text-gray-900 mr-auto"
+                    }`}
                     style={{
                         maxWidth: "75%",
                         wordWrap: "break-word",
@@ -59,5 +64,5 @@ export default function ChatMessages() {
                 </div>
             ))}
         </div>
-    );
+    )
 }

@@ -1,10 +1,10 @@
 import { h } from "preact"
 import { useState, useContext } from "preact/hooks"
-import { PeerIdContext } from "../components/peerIdContext"
+import { Context } from "../utils/context" // ייבוא של הקונטקסט המרכזי
 import { route } from "preact-router"
 
 export default function ConnectForm() {
-    const { connectToPeer } = useContext(PeerIdContext)
+    const { state, dispatch } = useContext(Context) // שימוש ב-context המעודכן
     const [connectPeerId, setConnectPeerId] = useState("")
     const [errorMessage, setErrorMessage] = useState("")
 
@@ -14,8 +14,11 @@ export default function ConnectForm() {
             return
         }
 
-        connectToPeer(connectPeerId)
+        // קריאה לפונקציה connectToPeer דרך dispatch
+        dispatch({ type: "CONNECT_PEER", payload: connectPeerId })
         setErrorMessage("")
+
+        // לא עושים redirect לעמוד הצ'אט עד שהחיבור הושלם
         route(`/chat/${connectPeerId}`)
     }
 

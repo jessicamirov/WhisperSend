@@ -1,11 +1,11 @@
 import { useEffect, useContext, useState } from "preact/hooks"
 import { Buffer } from "buffer"
-import { ethers } from "ethers"
 import { encryptFile } from "../utils/encryption"
-import { PeerIdContext } from "../components/peerIdContext"
+import { Context } from "../utils/context" // שינוי כאן
 
 export default function Encrypt() {
-    const { myWallet } = useContext(PeerIdContext)
+    const { state } = useContext(Context) // שימוש ב-context החדש
+    const { myWallet } = state
     const [file, setFile] = useState(null)
     const [message, setMessage] = useState("")
     const [isMnemonicConfirmed, setIsMnemonicConfirmed] = useState(false)

@@ -1,7 +1,10 @@
+// encryption.js
+
 import nacl from "tweetnacl"
 import { Buffer } from "buffer"
 import elliptic from "elliptic"
-const ec = elliptic.ec
+
+const ec = new elliptic.ec("secp256k1")
 
 /**
  * Derives a shared secret using elliptic curve Diffie-Hellman (ECDH).
@@ -11,9 +14,8 @@ const ec = elliptic.ec
  * @returns {Buffer} The derived shared secret as a buffer.
  */
 const getSharedSecret = (publicKeyHex, privateKeyHex) => {
-    const secp256k1 = new ec("secp256k1")
-    const senderEcKey = secp256k1.keyFromPrivate(privateKeyHex.slice(2), "hex")
-    const recipientEcKey = secp256k1.keyFromPublic(publicKeyHex.slice(2), "hex")
+    const senderEcKey = ec.keyFromPrivate(privateKeyHex.slice(2), "hex")
+    const recipientEcKey = ec.keyFromPublic(publicKeyHex.slice(2), "hex")
     const sharedSecret = senderEcKey.derive(recipientEcKey.getPublic())
     return Buffer.from(sharedSecret.toArray("be", 32))
 }
@@ -59,18 +61,19 @@ export const decryptText = (
         return Buffer.from(encryptedMessage, "hex").toString()
     }
 
-    const encryptedObj = JSON.parse(encryptedMessage)
     try {
-        const sharedSecret = getSharedSecret(
-            senderPublicKey,
-            recipientPrivateKey,
-        )
+        const encryptedObj = JSON.parse(encryptedMessage)
         const { nonce, encrypted } = encryptedObj
 
         if (!nonce || !encrypted) {
             console.error("Invalid nonce or encrypted data:", nonce, encrypted)
             return "error"
         }
+
+        const sharedSecret = getSharedSecret(
+            senderPublicKey,
+            recipientPrivateKey,
+        )
 
         const decrypted = nacl.box.open.after(
             Uint8Array.from(Buffer.from(encrypted, "hex")),
@@ -79,9 +82,7 @@ export const decryptText = (
         )
 
         if (decrypted) {
-            const decryptedMessage = Buffer.from(decrypted).toString()
-            console.log("Decrypted message:", decryptedMessage)
-            return decryptedMessage
+            return Buffer.from(decrypted).toString()
         } else {
             console.error(
                 "Decryption failed. Check keys, nonce, and encrypted values.",
@@ -164,8 +165,7 @@ export const decryptFile = (
             const blob = new Blob([decryptedBuffer], {
                 type: "application/octet-stream",
             })
-            const url = URL.createObjectURL(blob)
-            return url
+            return URL.createObjectURL(blob)
         } else {
             console.error(
                 "Decryption failed. Check keys, nonce, and encrypted values.",

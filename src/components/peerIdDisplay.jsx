@@ -1,8 +1,9 @@
 import { useContext } from "preact/hooks"
-import { PeerIdContext } from "./peerIdContext"
+import { Context } from "../utils/context" // ייבוא של הקונטקסט המרכזי
 
 export default function PeerIdDisplay() {
-    const { peerId } = useContext(PeerIdContext)
+    const { state } = useContext(Context) // שימוש ב-context המעודכן
+    const { peerId } = state // קבלת ה-peerId מה-state
 
     return (
         <div>
@@ -11,4 +12,3 @@ export default function PeerIdDisplay() {
         </div>
     )
 }
-

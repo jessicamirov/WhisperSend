@@ -1,119 +1,87 @@
-import { toast } from "react-toastify"
+import { Buffer } from "buffer"
 import {
     encryptText,
     encryptFile,
     decryptText,
     decryptFile,
 } from "./encryption"
-import sendSound from "../assets/whisper.mp3"
-import { Buffer } from "buffer"
-
-let encryptFileCounter = 1 
+import { toast } from "react-toastify"
 
 /**
- * Plays a sound when a message is sent.
- */
-export const playSendSound = () => {
-    const audio = new Audio(sendSound)
-    audio.play()
-}
-
-/**
- * Handles sending a text message.
- * Encrypts the message, updates the message list, plays a send sound, and displays a success toast.
+ * Handles sending a text message in the chat.
+ * Encrypts the message and updates the state with the new message.
  *
- * @param {Object} params - The parameters for sending a message.
- * @param {string} params.message - The message text to send.
- * @param {Object} params.connection - The connection object to send the message through.
- * @param {string} params.recipientPeerId - The peer ID of the recipient.
- * @param {Array} params.messages - The current list of messages.
- * @param {Object} params.myWallet - The wallet object of the sender.
- * @param {string} params.peerId - The peer ID of the sender.
- * @param {Function} params.setMessages - The function to update the messages state.
- * @param {Function} params.setMessage - The function to update the message input state.
+ * @param {Object} state - The current state of the application.
+ * @param {Function} dispatch - The dispatch function to update the state.
  */
-export const handleSendMessage = ({
-    message,
-    connection,
-    recipientPeerId,
-    messages,
-    myWallet,
-    peerId,
-    setMessages,
-    setMessage,
-}) => {
-    if (message.trim() && connection) {
-        const { encrypted, nonce } = encryptText(
+export const handleSendMessage = (state, dispatch) => {
+    const { message, connection, recipientPeerId, messages, myWallet, peerId } =
+        state
+
+    if (!message || !connection || !myWallet || !peerId || !recipientPeerId) {
+        console.error("Missing required data to send the message.", {
             message,
+            connection,
             recipientPeerId,
-            myWallet.privateKey,
-        )
-        const encMessage = JSON.stringify({
-            messageType: "text",
-            encrypted,
-            nonce,
+            myWallet,
+            peerId,
         })
-        console.log("Sending message:", encMessage)
-        connection.send(encMessage)
-        setMessages([
-            ...messages,
-            { sender: peerId, content: message, type: "text" },
-        ])
-        setMessage("")
-        playSendSound()
-        toast.success("Message sent!")
+        return
     }
+
+    const { encrypted, nonce } = encryptText(
+        message,
+        recipientPeerId,
+        myWallet.privateKey,
+    )
+    const encMessage = JSON.stringify({
+        messageType: "text",
+        encrypted,
+        nonce,
+    })
+
+    console.log("Sending message:", encMessage)
+    connection.send(encMessage)
+
+    dispatch({
+        type: "SET_MESSAGES",
+        payload: [
+            ...messages,
+            { sender: peerId, content: message, type: "text", isMine: true },
+        ],
+    })
+
+    dispatch({ type: "SET_MESSAGE", payload: "" })
 }
 
 /**
- * Formats the current date and time into a string suitable for filenames.
+ * Handles sending a file in the chat.
+ * Encrypts the file if the user chooses to, and updates the state with the file details.
  *
- * @returns {string} The formatted date string.
+ * @param {Object} e - The event object from the file input.
+ * @param {Object} state - The current state of the application.
+ * @param {Function} dispatch - The dispatch function to update the state.
  */
-const formatDate = () => {
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, "0")
-    const day = String(now.getDate()).padStart(2, "0")
-    const hours = String(now.getHours()).padStart(2, "0")
-    const minutes = String(now.getMinutes()).padStart(2, "0")
-    const seconds = String(now.getSeconds()).padStart(2, "0")
-    return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`
-}
+export const handleSendFile = (e, state, dispatch) => {
+    const { connection, recipientPeerId, myWallet, peerId, messages } = state
 
-/**
- * Handles sending a file.
- * Optionally encrypts the file, updates the message list with the file, and resets the file input.
- *
- * @param {Object} params - The parameters for sending a file.
- * @param {Event} params.e - The event triggered by selecting a file.
- * @param {Object} params.connection - The connection object to send the file through.
- * @param {string} params.recipientPeerId - The peer ID of the recipient.
- * @param {Object} params.myWallet - The wallet object of the sender.
- * @param {string} params.peerId - The peer ID of the sender.
- * @param {Function} params.setMessages - The function to update the messages state.
- * @param {Array} params.messages - The current list of messages.
- */
-export const handleSendFile = async ({
-    e,
-    connection,
-    recipientPeerId,
-    myWallet,
-    peerId,
-    setMessages,
-    messages,
-}) => {
+    if (!connection || !myWallet || !peerId || !recipientPeerId) {
+        console.error("Cannot send file. Missing required data.")
+        return
+    }
+
     const selectedFile = e.target.files[0]
     if (selectedFile) {
         const confirmEncrypt = window.confirm(
             "Do you want to encrypt the file before sending?",
         )
+
         const reader = new FileReader()
         reader.onload = async (event) => {
             const fileBuffer = Buffer.from(event.target.result)
             let encMessage
             let fileName = confirmEncrypt
-                ? `encrypted${encryptFileCounter++}-${formatDate()}${selectedFile.name.substring(selectedFile.name.lastIndexOf("."))}`
+                ? `encrypted-${new Date().getTime()}-${selectedFile.name}`
                 : selectedFile.name
 
             if (confirmEncrypt) {
@@ -139,28 +107,35 @@ export const handleSendFile = async ({
                     type: "application/octet-stream",
                 }),
             )
-            setMessages([
-                ...messages,
-                {
-                    sender: peerId,
-                    content: fileName,
-                    type: "file",
-                    url: fileURL,
-                    encrypted: confirmEncrypt,
-                },
-            ])
-            e.target.value = null
+
+            dispatch({
+                type: "SET_MESSAGES",
+                payload: [
+                    ...messages,
+                    {
+                        sender: peerId,
+                        content: fileName,
+                        type: "file",
+                        url: fileURL,
+                        encrypted: confirmEncrypt,
+                    },
+                ],
+            })
+
+            e.target.value = null // Reset the file input
         }
         reader.readAsArrayBuffer(selectedFile)
+    } else {
+        console.error("No file selected.")
     }
 }
 
 /**
- * Handles receiving a text message.
- * Decrypts the message and updates the message list.
+ * Handles receiving a text message in the chat.
+ * Decrypts the message and updates the state with the new message.
  *
  * @param {Function} setMessages - The function to update the messages state.
- * @param {string} privateKey - The private key used for decryption.
+ * @param {string} privateKey - The private key of the recipient.
  * @param {string} recipientPeerId - The peer ID of the sender.
  * @param {string} data - The encrypted message data.
  */
@@ -172,21 +147,28 @@ export const handleReceiveMessage = (
 ) => {
     const decryptedMessage = decryptText(data, recipientPeerId, privateKey)
     console.log("Decrypted message:", decryptedMessage)
+
     if (decryptedMessage !== "error") {
         setMessages((prevMessages) => [
             ...prevMessages,
             { sender: "Peer", content: decryptedMessage, type: "text" },
         ])
+    } else {
+        console.error("Failed to decrypt message", {
+            data,
+            recipientPeerId,
+            privateKey,
+        })
     }
 }
 
 /**
- * Handles receiving a file.
- * Decrypts the file if needed, generates a URL for the file, and updates the message list.
+ * Handles receiving a file in the chat.
+ * Decrypts the file if needed, generates a URL for the file, and updates the state with the file details.
  *
  * @param {Array} messages - The current list of messages.
  * @param {Function} setMessages - The function to update the messages state.
- * @param {string} privateKey - The private key used for decryption.
+ * @param {string} privateKey - The private key of the recipient.
  * @param {string} recipientPeerId - The peer ID of the sender.
  * @param {Object} data - The encrypted file data.
  */
@@ -280,4 +262,12 @@ export const handleReceiveFile = (
             },
         ])
     }
+}
+
+/**
+ * Plays a sound when a message is sent.
+ */
+export const playSendSound = () => {
+    const audio = new Audio("/assets/whisper.mp3")
+    audio.play()
 }
