@@ -6,12 +6,12 @@ export default defineConfig({
   plugins: [preact()],
   build: {
     rollupOptions: {
-      external: ['buffer', 'tweetnacl'],
+      external: ['buffer', 'tweetnacl', 'elliptic'],
     },
   },
   resolve: {
     alias: {
-      buffer: 'buffer', // תוודא שהמודול buffer יופנה בצורה נכונה
+      buffer: 'buffer',
     },
   },
 })
