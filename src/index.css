@@ -46,3 +46,40 @@ html {
   border-color: transparent transparent #3b82f6 transparent;
 }
 
+.chat-input-container {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+}
+
+.emoji-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;
+    margin-right: 10px;
+}
+
+.emoji-picker {
+    position: absolute;
+    bottom: 50px;
+    right: 50px;
+    z-index: 100;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.send-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    margin-left: 10px;
+    cursor: pointer;
+}

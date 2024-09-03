@@ -1,12 +1,12 @@
 import { h } from "preact"
 import { useState, useContext } from "preact/hooks"
-import { Context } from "../utils/context" // ייבוא של הקונטקסט המרכזי
-import { route } from "preact-router"
+import { PeerIdContext } from "./connectionManager"
 
 export default function ConnectForm() {
-    const { state, dispatch } = useContext(Context) // שימוש ב-context המעודכן
+    const { connectToPeer } = useContext(PeerIdContext)
     const [connectPeerId, setConnectPeerId] = useState("")
     const [errorMessage, setErrorMessage] = useState("")
+    const [isConnecting, setIsConnecting] = useState(false) // משתנה חדש כדי לעקוב אחרי מצב החיבור
 
     const handleConnect = () => {
         if (!connectPeerId) {
@@ -14,12 +14,16 @@ export default function ConnectForm() {
             return
         }
 
-        // קריאה לפונקציה connectToPeer דרך dispatch
-        dispatch({ type: "CONNECT_PEER", payload: connectPeerId })
-        setErrorMessage("")
-
-        // לא עושים redirect לעמוד הצ'אט עד שהחיבור הושלם
-        route(`/chat/${connectPeerId}`)
+        setIsConnecting(true) // עדכון המצב שהחיבור בתהליך
+        connectToPeer(connectPeerId)
+            .then(() => {
+                setIsConnecting(false) // החיבור הצליח, ניתן לאפס את המצב
+                setErrorMessage("")
+            })
+            .catch((err) => {
+                setIsConnecting(false) // החיבור נכשל, ניתן לאפס את המצב
+                setErrorMessage("Connection failed: " + err.message)
+            })
     }
 
     return (
@@ -33,12 +37,14 @@ export default function ConnectForm() {
                 onChange={(e) => setConnectPeerId(e.target.value)}
                 className="block w-full text-gray-800 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter peer ID"
+                disabled={isConnecting} // חוסם את השדה במהלך החיבור
             />
             <button
                 onClick={handleConnect}
-                className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white font-bold rounded-lg shadow-lg hover:from-blue-700 hover:to-blue-900 transition duration-300 mt-4"
+                className={`w-full px-4 py-3 ${isConnecting ? "bg-gray-400" : "bg-gradient-to-r from-blue-600 to-blue-800"} text-white font-bold rounded-lg shadow-lg transition duration-300 mt-4`}
+                disabled={isConnecting} // חוסם את הכפתור במהלך החיבור
             >
-                Connect
+                {isConnecting ? "Connecting..." : "Connect"}
             </button>
             {errorMessage && (
                 <p className="mt-6 text-red-500 text-lg font-semibold">

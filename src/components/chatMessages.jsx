@@ -1,13 +1,13 @@
 import { useContext } from "preact/hooks"
-import { Context } from "../utils/context" // ייבוא הקונטקסט המרכזי
+import { PeerIdContext } from "./connectionManager"
 
 export default function ChatMessages() {
-    const { state } = useContext(Context) // שימוש בקונטקסט המעודכן
-    const { messages, peerId } = state // גישה ל-messages ול-peerId מה-state
+    const { messages, peerId } = useContext(PeerIdContext)
 
     const handleDownload = (msg) => {
+        console.log("URL received:", msg.url) // הדפסת ה-URL שהתקבל
         const link = document.createElement("a")
-        link.href = msg.url // השתמש ב-URL שכבר קיים
+        link.href = msg.url // השתמש ב-URL של הקובץ המוצפן
         link.download = msg.content // שם הקובץ להורדה
         document.body.appendChild(link)
         link.click()
@@ -19,11 +19,7 @@ export default function ChatMessages() {
             {messages.map((msg, index) => (
                 <div
                     key={index}
-                    className={`mb-2 p-2 rounded-lg ${
-                        msg.sender === peerId
-                            ? "bg-blue-500 text-white ml-auto"
-                            : "bg-gray-300 text-gray-900 mr-auto"
-                    }`}
+                    className={`mb-2 p-2 rounded-lg ${msg.sender === peerId ? "bg-blue-500 text-white ml-auto" : "bg-gray-300 text-gray-900 mr-auto"}`}
                     style={{
                         maxWidth: "75%",
                         wordWrap: "break-word",

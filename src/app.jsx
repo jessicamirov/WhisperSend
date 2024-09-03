@@ -5,28 +5,35 @@ import ShareSecurely from "./pages/shareSecurely"
 import ChatPage from "./pages/chatPage"
 import Layout from "./components/layout"
 import { Router } from "preact-router"
-import { Context } from "./utils/context"
-import { InitState, reducer } from "./utils/reducer"
-import ConnectionManager from "./components/connectionManager" 
-import { useReducer } from "preact/hooks"
+import { PeerIdProvider } from "./components/connectionManager"
+import { ToastContainer } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 
 export function App() {
-    const [state, dispatch] = useReducer(reducer, InitState)
-
     return (
-        <Context.Provider value={{ state, dispatch }}>
-            <ConnectionManager>
-                {" "}
-                <Layout>
-                    <Router>
-                        <Home path="/" />
-                        <Encrypt path="/encrypt" />
-                        <Decrypt path="/decrypt" />
-                        <ShareSecurely path="/shareSecurely" />
-                        <ChatPage path="/chat/:connectPeerId" />
-                    </Router>
-                </Layout>
-            </ConnectionManager>
-        </Context.Provider>
+        <PeerIdProvider>
+            <Layout>
+                <Router>
+                    <Home path="/" />
+                    <Encrypt path="/encrypt" />
+                    <Decrypt path="/decrypt" />
+                    <ShareSecurely path="/shareSecurely" />
+                    <ChatPage path="/chat/:connectPeerId" />
+                </Router>
+            </Layout>
+            {/* ToastContainer for displaying toast notifications */}
+            <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+            />
+        </PeerIdProvider>
     )
 }

@@ -9,6 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emoji-mart/data": "^1.2.1",
+    "@emoji-mart/react": "^1.1.1",
+    "emailjs-com": "^3.2.0",
     "ethers": "^6.1.0",
     "peerjs": "^1.5.4",
     "preact": "^10.22.1",

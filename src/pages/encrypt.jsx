@@ -1,11 +1,11 @@
 import { useEffect, useContext, useState } from "preact/hooks"
 import { Buffer } from "buffer"
+import { ethers } from "ethers"
 import { encryptFile } from "../utils/encryption"
-import { Context } from "../utils/context" // שינוי כאן
+import { PeerIdContext } from "../components/connectionManager"
 
 export default function Encrypt() {
-    const { state } = useContext(Context) // שימוש ב-context החדש
-    const { myWallet } = state
+    const { myWallet } = useContext(PeerIdContext)
     const [file, setFile] = useState(null)
     const [message, setMessage] = useState("")
     const [isMnemonicConfirmed, setIsMnemonicConfirmed] = useState(false)
@@ -16,6 +16,8 @@ export default function Encrypt() {
         const isMnemonicSaved = sessionStorage.getItem("mnemonicSaved")
         if (!isMnemonicSaved) {
             setShowMnemonicPopup(true)
+        } else {
+            console.log("Mnemonic already saved.")
         }
     }, [])
 
@@ -149,6 +151,62 @@ export default function Encrypt() {
                         {message}
                     </p>
                 )}
+            </div>
+            <div className="bg-white dark:bg-gray-800 p-10 rounded-xl shadow-2xl w-full max-w-5xl transform transition duration-500 hover:scale-105">
+                <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
+                    How Encryption Works
+                </h3>
+                <div className="flex flex-col md:flex-row md:justify-between md:space-x-6">
+                    <div className="flex-1 mb-8 md:mb-0">
+                        <div className="flex items-center mb-4">
+                            <div className="step-circle bg-blue-500">1</div>
+                            <h4 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+                                Select a file
+                            </h4>
+                        </div>
+                        <p className="text-gray-600 dark:text-gray-400">
+                            Choose a file to encrypt using the "Choose a file"
+                            button.
+                        </p>
+                    </div>
+                    <div className="flex-1 mb-8 md:mb-0">
+                        <div className="flex items-center mb-4">
+                            <div className="step-circle bg-green-500">2</div>
+                            <h4 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+                                Encrypt
+                            </h4>
+                        </div>
+                        <p className="text-gray-600 dark:text-gray-400">
+                            Click the "Encrypt & Save" button to encrypt the
+                            file.
+                        </p>
+                    </div>
+                    <div className="flex-1 mb-8 md:mb-0">
+                        <div className="flex items-center mb-4">
+                            <div className="step-circle bg-yellow-500">3</div>
+                            <h4 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+                                Save file and keys
+                            </h4>
+                        </div>
+                        <p className="text-gray-600 dark:text-gray-400">
+                            Download the encrypted file and the encryption keys.
+                            Without the keys, you cannot decrypt the file in the
+                            future.
+                        </p>
+                    </div>
+                    <div className="flex-1">
+                        <div className="flex items-center mb-4">
+                            <div className="step-circle bg-red-500">4</div>
+                            <h4 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+                                Store securely
+                            </h4>
+                        </div>
+                        <p className="text-gray-600 dark:text-gray-400">
+                            Store the encryption keys securely to ensure you can
+                            access your files when needed.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     )

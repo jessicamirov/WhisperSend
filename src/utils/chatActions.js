@@ -1,95 +1,86 @@
-import { Buffer } from "buffer"
+import { toast } from "react-toastify"
 import {
     encryptText,
     encryptFile,
     decryptText,
     decryptFile,
 } from "./encryption"
-import { toast } from "react-toastify"
+import sendSound from "../assets/whisper.mp3"
+import { Buffer } from "buffer"
 
-/**
- * Handles sending a text message in the chat.
- * Encrypts the message and updates the state with the new message.
- *
- * @param {Object} state - The current state of the application.
- * @param {Function} dispatch - The dispatch function to update the state.
- */
-export const handleSendMessage = (state, dispatch) => {
-    const { message, connection, recipientPeerId, messages, myWallet, peerId } =
-        state
+let encryptFileCounter = 1
 
-    if (!message || !connection || !myWallet || !peerId || !recipientPeerId) {
-        console.error("Missing required data to send the message.", {
-            message,
-            connection,
-            recipientPeerId,
-            myWallet,
-            peerId,
-        })
-        return
-    }
-
-    const { encrypted, nonce } = encryptText(
-        message,
-        recipientPeerId,
-        myWallet.privateKey,
-    )
-    const encMessage = JSON.stringify({
-        messageType: "text",
-        encrypted,
-        nonce,
-    })
-
-    console.log("Sending message:", encMessage)
-    connection.send(encMessage)
-
-    dispatch({
-        type: "SET_MESSAGES",
-        payload: [
-            ...messages,
-            { sender: peerId, content: message, type: "text", isMine: true },
-        ],
-    })
-
-    dispatch({ type: "SET_MESSAGE", payload: "" })
+export const playSendSound = () => {
+    const audio = new Audio(sendSound)
+    audio.play()
 }
 
-/**
- * Handles sending a file in the chat.
- * Encrypts the file if the user chooses to, and updates the state with the file details.
- *
- * @param {Object} e - The event object from the file input.
- * @param {Object} state - The current state of the application.
- * @param {Function} dispatch - The dispatch function to update the state.
- */
-export const handleSendFile = (e, state, dispatch) => {
-    const { connection, recipientPeerId, myWallet, peerId, messages } = state
-
-    if (!connection || !myWallet || !peerId || !recipientPeerId) {
-        console.error("Cannot send file. Missing required data.")
-        return
+export const handleSendMessage = ({
+    message,
+    connection,
+    recipientPeerId,
+    messages,
+    myWallet,
+    peerId,
+    setMessages,
+    setMessage,
+}) => {
+    if (connection && connection.open) {
+        const { encrypted, nonce } = encryptText(
+            message,
+            recipientPeerId,
+            myWallet.privateKey,
+        )
+        const encMessage = JSON.stringify({
+            messageType: "text",
+            encrypted,
+            nonce,
+        })
+        connection.send(encMessage)
+        setMessages([
+            ...messages,
+            { sender: peerId, content: message, type: "text" },
+        ])
+        setMessage("")
+        playSendSound()
+        toast.success("Message sent!")
+    } else {
+        console.error("Connection is not open, cannot send message.")
     }
+}
 
+export const handleSendFile = async ({
+    e,
+    connection,
+    recipientPeerId,
+    myWallet,
+    peerId,
+    setMessages,
+    messages,
+    openConfirmModal,
+}) => {
     const selectedFile = e.target.files[0]
     if (selectedFile) {
-        const confirmEncrypt = window.confirm(
+        const confirmEncrypt = await openConfirmModal(
+            "Encrypt File",
             "Do you want to encrypt the file before sending?",
         )
-
         const reader = new FileReader()
         reader.onload = async (event) => {
             const fileBuffer = Buffer.from(event.target.result)
             let encMessage
-            let fileName = confirmEncrypt
-                ? `encrypted-${new Date().getTime()}-${selectedFile.name}`
-                : selectedFile.name
+            let fileName = selectedFile.name
 
             if (confirmEncrypt) {
-                encMessage = encryptFile(
+                const encryptedFileData = encryptFile(
                     fileBuffer,
                     recipientPeerId,
                     myWallet.privateKey,
                 )
+                encMessage = JSON.stringify(encryptedFileData)
+                fileName = `encrypted${encryptFileCounter++}${fileName.substring(
+                    fileName.lastIndexOf("."),
+                )}.txt`
             } else {
                 encMessage = fileBuffer.toString("hex")
             }
@@ -98,88 +89,62 @@ export const handleSendFile = (e, state, dispatch) => {
                 JSON.stringify({
                     messageType: "file",
                     data: encMessage,
-                    fileName: fileName,
+                    fileName,
                 }),
             )
 
             const fileURL = URL.createObjectURL(
-                new Blob([fileBuffer], {
-                    type: "application/octet-stream",
+                new Blob([encMessage], {
+                    type: confirmEncrypt ? "text/plain" : selectedFile.type,
                 }),
             )
 
-            dispatch({
-                type: "SET_MESSAGES",
-                payload: [
-                    ...messages,
-                    {
-                        sender: peerId,
-                        content: fileName,
-                        type: "file",
-                        url: fileURL,
-                        encrypted: confirmEncrypt,
-                    },
-                ],
-            })
+            const displayName = confirmEncrypt
+                ? fileName
+                : `${fileName} (Not Encrypted)`
 
-            e.target.value = null // Reset the file input
+            setMessages([
+                ...messages,
+                {
+                    sender: peerId,
+                    content: displayName,
+                    type: "file",
+                    url: fileURL,
+                    encrypted: confirmEncrypt,
+                },
+            ])
         }
         reader.readAsArrayBuffer(selectedFile)
-    } else {
-        console.error("No file selected.")
+
+        e.target.value = null
     }
 }
 
-/**
- * Handles receiving a text message in the chat.
- * Decrypts the message and updates the state with the new message.
- *
- * @param {Function} setMessages - The function to update the messages state.
- * @param {string} privateKey - The private key of the recipient.
- * @param {string} recipientPeerId - The peer ID of the sender.
- * @param {string} data - The encrypted message data.
- */
 export const handleReceiveMessage = (
     setMessages,
     privateKey,
-    recipientPeerId,
+    senderPublicKey,
     data,
 ) => {
-    const decryptedMessage = decryptText(data, recipientPeerId, privateKey)
-    console.log("Decrypted message:", decryptedMessage)
-
+    const decryptedMessage = decryptText(data, senderPublicKey, privateKey)
     if (decryptedMessage !== "error") {
         setMessages((prevMessages) => [
             ...prevMessages,
             { sender: "Peer", content: decryptedMessage, type: "text" },
         ])
     } else {
-        console.error("Failed to decrypt message", {
-            data,
-            recipientPeerId,
-            privateKey,
-        })
+        console.error("Failed to decrypt message.")
     }
 }
 
-/**
- * Handles receiving a file in the chat.
- * Decrypts the file if needed, generates a URL for the file, and updates the state with the file details.
- *
- * @param {Array} messages - The current list of messages.
- * @param {Function} setMessages - The function to update the messages state.
- * @param {string} privateKey - The private key of the recipient.
- * @param {string} recipientPeerId - The peer ID of the sender.
- * @param {Object} data - The encrypted file data.
- */
-export const handleReceiveFile = (
+export const handleReceiveFile = async (
     messages,
     setMessages,
     privateKey,
-    recipientPeerId,
+    senderPublicKey,
     data,
+    openConfirmModal,
 ) => {
-    console.log("handleReceiveFile called with:", data)
     let fileURL
     let fileName = data.fileName
     let encrypted = false
@@ -194,7 +159,6 @@ export const handleReceiveFile = (
         data.data.length % 2 === 0 &&
         /^[0-9a-f]+$/i.test(data.data)
     ) {
-        console.log("Processing unencrypted file:", fileName)
         const fileBuffer = Buffer.from(data.data, "hex")
         const blob = new Blob([fileBuffer], {
             type: "application/octet-stream",
@@ -202,48 +166,39 @@ export const handleReceiveFile = (
         fileURL = URL.createObjectURL(blob)
         toast.success("File received!")
     } else {
-        console.log("Processing encrypted file:", fileName)
         const parsedData = JSON.parse(data.data)
-        const { nonce, encrypted: encryptedData } = parsedData
-
-        if (!nonce || !encryptedData) {
-            console.error(
-                "Invalid nonce or encrypted data:",
-                nonce,
-                encryptedData,
-            )
-            return
-        }
+        const { nonce, encrypted: encryptedData, type } = parsedData
 
         const fileBuffer = Buffer.from(encryptedData, "hex")
         fileURL = URL.createObjectURL(
-            new Blob([fileBuffer], { type: "application/octet-stream" }),
+            new Blob([fileBuffer], {
+                type: type || "application/octet-stream",
+            }),
         )
         encrypted = true
         toast.success("Encrypted file received!")
 
-        if (document.visibilityState === "visible") {
-            const confirmDecrypt = window.confirm(
-                "Do you want to decrypt the file?",
+        const shouldDecrypt = await openConfirmModal(
+            "Decrypt File",
+            "Do you want to decrypt the received file?",
+        )
+
+        if (shouldDecrypt) {
+            const decryptedBlob = decryptFile(
+                data.data,
+                senderPublicKey,
+                privateKey,
             )
-            if (confirmDecrypt) {
-                console.log("User chose to decrypt the file:", fileName)
-                const decryptedFileURL = decryptFile(
-                    data.data,
-                    recipientPeerId,
-                    privateKey,
-                )
-                if (decryptedFileURL) {
-                    fileURL = decryptedFileURL
-                    fileName = fileName.replace("encrypted", "decrypted")
-                    toast.success("File decrypted!")
-                } else {
-                    console.error("File decryption failed.")
-                    return
-                }
+            if (decryptedBlob) {
+                fileURL = URL.createObjectURL(decryptedBlob)
+                fileName = fileName
+                    .replace("encrypted", "decrypted")
+                    .replace(".txt", "")
+                toast.success("File decrypted!")
+            } else {
+                console.error("File decryption failed.")
+                return
             }
-        } else {
-            console.warn("Page is not visible; skipping window.confirm()")
         }
     }
 
@@ -258,16 +213,8 @@ export const handleReceiveFile = (
                 content: fileName,
                 type: "file",
                 url: fileURL,
-                encrypted: encrypted,
+                encrypted,
             },
         ])
     }
-}
-
-/**
- * Plays a sound when a message is sent.
- */
-export const playSendSound = () => {
-    const audio = new Audio("/assets/whisper.mp3")
-    audio.play()
 }
