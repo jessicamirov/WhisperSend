@@ -2,11 +2,14 @@ import { useState, useContext } from "preact/hooks"
 import { PeerIdContext } from "../components/peerIdContext"
 
 export default function ConnectForm() {
-    const { connectToPeer } = useContext(PeerIdContext)
-    const [connectPeerId, setConnectPeerId] = useState("")
+    const { connectToPeer, connection } = useContext(PeerIdContext);   
+  const [connectPeerId, setConnectPeerId] = useState("")
     const [errorMessage, setErrorMessage] = useState("")
     const [isConnecting, setIsConnecting] = useState(false) 
     const [connectionTimeout, setConnectionTimeout] = useState(null) 
+
+
+    
 
     const handleConnect = () => {
         if (!connectPeerId) {
@@ -37,10 +40,17 @@ export default function ConnectForm() {
     }
 
     const handleCancel = () => {
-        clearTimeout(connectionTimeout) 
-        setIsConnecting(false) 
-        setErrorMessage("Connection cancelled.")
+        clearTimeout(connectionTimeout); 
+    setIsConnecting(false); 
+    setErrorMessage("Connection cancelled.");
+    
+    if (connection) {
+        console.log("Sending cancellation to peer"); // Debugging print
+        connection.send(JSON.stringify({ type: "connection-cancelled" }));
+    } else {
+        console.log("No connection available"); // Debugging print
     }
+}
 
     return (
         <div className="mb-6">

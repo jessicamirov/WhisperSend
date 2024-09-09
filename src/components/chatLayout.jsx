@@ -1,6 +1,7 @@
 import { useContext, useState, useEffect } from "preact/hooks"
 import { PeerIdContext } from "./peerIdContext"
 import ConfirmModal from "../utils/confirmModal" 
+import { route } from "preact-router";
 
 export default function ChatLayout({
     peerId,
