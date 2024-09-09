@@ -95,7 +95,7 @@ export const encryptFile = (file, recipientPublicKey, senderPrivateKey) => {
     return {
         nonce: Buffer.from(nonce).toString("hex"),
         encrypted: Buffer.from(encrypted).toString("hex"),
-        type: file.type, // Retaining the file type
+        type: file.type, 
     }
 }
 

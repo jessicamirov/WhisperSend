@@ -1,11 +1,9 @@
-import { h } from "preact"
 import { useEffect, useContext, useState } from "preact/hooks"
 import { PeerIdContext } from "../components/peerIdContext"
-import { route } from "preact-router"
 import { toast } from "react-toastify"
 
 export default function Invite({ connectPeerId }) {
-    const { peerId, connectToPeer, peer, setRecipientPeerId } =
+    const { connectToPeer, peer, setRecipientPeerId } =
         useContext(PeerIdContext)
     const [isConnecting, setIsConnecting] = useState(false)
     const [errorMessage, setErrorMessage] = useState("")
@@ -17,7 +15,6 @@ export default function Invite({ connectPeerId }) {
 
             connectToPeer(connectPeerId)
                 .then(() => {
-                    // ההתחברות ממתינה לאישור מהצד השני
                     toast.info("Awaiting approval from the other peer...")
                 })
                 .catch((err) => {

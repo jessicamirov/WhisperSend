@@ -1,4 +1,3 @@
-import { h } from "preact"
 import { useState } from "preact/hooks"
 import emailjs from "emailjs-com"
 
@@ -6,28 +5,23 @@ export default function ContactUs() {
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
     const [message, setMessage] = useState("")
-    const [status, setStatus] = useState("") // למעקב אחרי הסטטוס של שליחת המייל
+    const [status, setStatus] = useState("")
 
     const handleSubmit = (e) => {
         e.preventDefault()
-
-        // הפרמטרים שהוגדרו בתבנית של EmailJS
         const templateParams = {
             name,
             email,
             message,
         }
-
-        // שליחת המייל
-
         console.log("Preparing to send email...")
 
         emailjs
             .send(
-                "service_amnfo81", // Service ID
-                "template_zitelyq", // Template ID
+                "service_amnfo81",
+                "template_zitelyq",
                 templateParams,
-                "9RtmPNARIFbNV1ms1", // User ID
+                "9RtmPNARIFbNV1ms1", 
             )
             .then(
                 (response) => {
@@ -41,8 +35,6 @@ export default function ContactUs() {
             )
 
         console.log("Email send attempt complete.")
-
-        // איפוס השדות
         setName("")
         setEmail("")
         setMessage("")
@@ -93,7 +85,6 @@ export default function ContactUs() {
                     </button>
                 </form>
                 {status && <p className="mt-4 text-green-500">{status}</p>}{" "}
-                {/* הצגת סטטוס */}
             </div>
         </section>
     )

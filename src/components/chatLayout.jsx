@@ -1,71 +1,117 @@
-import { h } from "preact"
-import PeerIdDisplay from "./peerIdDisplay"
-import { useContext } from "preact/hooks"
+import { useContext, useState, useEffect } from "preact/hooks"
 import { PeerIdContext } from "./peerIdContext"
-import { route } from "preact-router"
+import ConfirmModal from "../utils/confirmModal" 
 
-export default function ChatLayout({ peerId, connectPeerId, children }) {
-    const { disconnect, showExitButton, handleExit } = useContext(PeerIdContext)
+export default function ChatLayout({
+    peerId,
+    connectPeerId,
+    children,
+    instructions,
+}) {
+    const { disconnect, showExitButton, handleExit, isDisconnected } =
+        useContext(PeerIdContext)
+    const [showPeerModal, setShowPeerModal] = useState(false)
+    const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768)
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsSmallScreen(window.innerWidth < 768)
+        }
+
+        window.addEventListener("resize", handleResize)
+        handleResize()
+
+        return () => window.removeEventListener("resize", handleResize)
+    }, [])
 
     const handleDisconnect = () => {
         disconnect(true)
         route("/shareSecurely")
     }
 
+    useEffect(() => {
+        console.log("isDisconnected in ChatLayout:", isDisconnected)
+    }, [isDisconnected])
+
     return (
-        <div className="min-h-screen flex flex-col items-center p-4 bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-gray-800 dark:to-gray-900">
-            {/* Peer ID של המשתמש הנוכחי */}
-            <div className="w-full max-w-7xl mb-4">
-                <PeerIdDisplay
-                    peerId={peerId}
-                    customStyle="w-full"
-                    title=""
-                    showIcons={true}
-                />
-            </div>
+        <div className="min-h-screen w-full flex flex-col items-center p-4 bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-gray-800 dark:to-gray-900">
+            {!isSmallScreen && (
+                <div className="flex items-center justify-between w-full bg-white dark:bg-gray-800 p-4 rounded-xl shadow-2xl mb-4">
+                    <div className="flex items-center space-x-2 truncate">
+                        <p className="text-xs font-bold text-gray-800 dark:text-gray-200">
+                            Peer ID you're chatting with:
+                        </p>
+                        <span
+                            className="text-xs font-bold bg-gray-700 text-white px-2 py-1 rounded-lg"
+                            style={{
+                                whiteSpace: "normal",
+                                wordWrap: "break-word",
+                                overflowWrap: "break-word",
+                                maxWidth: "100%",
+                            }}
+                        >
+                            {connectPeerId}
+                        </span>
+                    </div>
+                    <div className="flex space-x-2 ml-4">
+                        {showExitButton ? (
+                            <button
+                                onClick={handleExit}
+                                className="text-sm bg-red-500 text-white px-3 py-1 rounded-lg shadow-lg hover:bg-red-600 transition duration-300"
+                            >
+                                Exit
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleDisconnect}
+                                className="text-sm bg-red-500 text-white px-3 py-1 rounded-lg shadow-lg hover:bg-red-600 transition duration-300"
+                            >
+                                Disconnect
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
 
-            {/* קונטיינר של Peer ID השני והכפתור בשורה אחת */}
-            <div className="flex items-center justify-between w-full max-w-7xl bg-white dark:bg-gray-800 p-4 rounded-xl shadow-2xl mb-4">
-                <div className="flex items-center space-x-2 truncate">
-                    <p className="text-xs font-bold text-gray-800 dark:text-gray-200 whitespace-nowrap">
-                        Chatting with peer:
-                    </p>
-                    <span
-                        className="text-xs font-bold bg-gray-700 text-white px-2 py-1 rounded-lg truncate"
-                        style={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            maxWidth: "65%",
-                        }}
+            {isSmallScreen && (
+                <div className="flex items-center justify-center space-x-4 mb-4">
+                    <button
+                        onClick={handleDisconnect}
+                        className="text-xs bg-red-500 text-white px-3 py-1 rounded-lg shadow-lg hover:bg-red-600 transition duration-300"
                     >
-                        {connectPeerId}
-                    </span>
+                        Disconnect
+                    </button>
+                    <button
+                        className="text-xs bg-green-500 text-white px-3 py-1 rounded-lg shadow-lg hover:bg-green-600 transition duration-300"
+                        onClick={() => setShowPeerModal(true)}
+                    >
+                        Show Peer Info
+                    </button>
                 </div>
-                <div className="flex space-x-2 ml-4">
-                    {showExitButton ? (
-                        <button
-                            onClick={handleExit}
-                            className="text-sm bg-red-500 text-white px-3 py-1 rounded-lg shadow-lg hover:bg-red-600 transition duration-300"
-                        >
-                            Exit
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handleDisconnect}
-                            className="text-sm bg-red-500 text-white px-3 py-1 rounded-lg shadow-lg hover:bg-red-600 transition duration-300"
-                        >
-                            Disconnect
-                        </button>
-                    )}
+            )}
+
+            {showPeerModal && (
+                <ConfirmModal
+                    title="Peer Information"
+                    message={`Your Peer ID: ${peerId || "N/A"}\nPeer ID you're chatting with: ${connectPeerId}`}
+                    onConfirm={() => setShowPeerModal(false)}
+                    onCancel={() => setShowPeerModal(false)}
+                />
+            )}
+
+            <div className="w-full flex-grow mb-4">
+                <div className="w-full flex flex-col bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl overflow-hidden">
+                    {children}
                 </div>
             </div>
 
-            {/* חלון הצ'אט מוגדל */}
-            <div className="flex-grow flex w-full max-w-7xl bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl overflow-auto">
-                <div className="w-full h-full flex flex-col">
-                    {children} {/* הצגת הודעות והכנסת הודעה חדשה */}
+            {instructions && (
+                <div className="w-full mt-4">
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-2xl">
+                        {instructions}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     )
 }

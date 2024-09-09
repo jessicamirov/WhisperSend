@@ -1,5 +1,3 @@
-import { h } from "preact"
-
 export default function SecureChatInfo() {
     return (
         <div className="bg-white dark:bg-gray-800 p-10 rounded-xl shadow-2xl w-full max-w-4xl transform transition duration-500 hover:scale-105">

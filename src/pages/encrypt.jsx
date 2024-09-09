@@ -1,8 +1,9 @@
 import { useEffect, useContext, useState } from "preact/hooks"
 import { Buffer } from "buffer"
-import { ethers } from "ethers"
 import { encryptFile } from "../utils/encryption"
-import { PeerIdContext } from "../components/connectionManager"
+import { PeerIdContext } from "../components/peerIdContext"
+import ToggleInstructionsButton from "../components/ToggleInstructionsButton" 
+import InstructionsLayout from "../components/InstructionsLayout"
 
 export default function Encrypt() {
     const { myWallet } = useContext(PeerIdContext)
@@ -11,13 +12,24 @@ export default function Encrypt() {
     const [isMnemonicConfirmed, setIsMnemonicConfirmed] = useState(false)
     const [showMnemonicPopup, setShowMnemonicPopup] = useState(false)
     const [isEncrypted, setIsEncrypted] = useState(false)
+    const [showInstructions, setShowInstructions] = useState(false) 
+    const [isSmallScreen, setIsSmallScreen] = useState(false) 
 
     useEffect(() => {
-        const isMnemonicSaved = sessionStorage.getItem("mnemonicSaved")
-        if (!isMnemonicSaved) {
-            setShowMnemonicPopup(true)
-        } else {
-            console.log("Mnemonic already saved.")
+        const handleResize = () => {
+            setIsSmallScreen(window.innerWidth < 768) 
+        }
+
+        window.addEventListener("resize", handleResize)
+        handleResize() 
+
+        return () => window.removeEventListener("resize", handleResize)
+    }, [])
+
+    useEffect(() => {
+        const mnemonicShown = sessionStorage.getItem("mnemonicSaved")
+        if (!mnemonicShown) {
+            setShowMnemonicPopup(true) 
         }
     }, [])
 
@@ -40,8 +52,8 @@ export default function Encrypt() {
 
     const handleConfirmMnemonic = () => {
         if (isMnemonicConfirmed) {
-            sessionStorage.setItem("mnemonicSaved", "true")
-            setShowMnemonicPopup(false)
+            sessionStorage.setItem("mnemonicSaved", "true") 
+            setShowMnemonicPopup(false) 
         } else {
             alert("Please confirm that you have saved your mnemonic.")
         }
@@ -79,54 +91,9 @@ export default function Encrypt() {
         reader.readAsArrayBuffer(file)
     }
 
-    if (showMnemonicPopup) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-800">
-                <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">
-                    <h2 className="text-2xl font-bold mb-4">Mnemonic Words</h2>
-                    <p className="mb-4">
-                        Please save the following mnemonic phrase. You will need
-                        it to decrypt your files.
-                    </p>
-                    <div className="bg-gray-200 p-4 rounded mb-4">
-                        {myWallet.mnemonic.phrase}
-                    </div>
-                    <div className="mb-4">
-                        <button
-                            onClick={handleDownloadMnemonic}
-                            className="bg-blue-500 text-white px-4 py-2 rounded"
-                        >
-                            Download Mnemonic
-                        </button>
-                    </div>
-                    <div className="flex items-center">
-                        <input
-                            type="checkbox"
-                            id="confirm"
-                            className="mr-2"
-                            checked={isMnemonicConfirmed}
-                            onChange={() =>
-                                setIsMnemonicConfirmed(!isMnemonicConfirmed)
-                            }
-                        />
-                        <label htmlFor="confirm" className="text-gray-700">
-                            I have written down the mnemonic phrase
-                        </label>
-                    </div>
-                    <button
-                        onClick={handleConfirmMnemonic}
-                        className="mt-4 bg-green-500 text-white px-4 py-2 rounded"
-                    >
-                        Confirm
-                    </button>
-                </div>
-            </div>
-        )
-    }
-
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-gray-800 dark:to-gray-900">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-5xl transform transition duration-500 hover:scale-105 mb-8">
+        <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-gray-800 dark:to-gray-900 relative">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-5xl mx-auto mb-8">
                 <h2 className="text-4xl font-extrabold text-gray-800 dark:text-gray-200 mb-6">
                     Self-Encryption
                 </h2>
@@ -152,62 +119,93 @@ export default function Encrypt() {
                     </p>
                 )}
             </div>
-            <div className="bg-white dark:bg-gray-800 p-10 rounded-xl shadow-2xl w-full max-w-5xl transform transition duration-500 hover:scale-105">
-                <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
-                    How Encryption Works
-                </h3>
-                <div className="flex flex-col md:flex-row md:justify-between md:space-x-6">
-                    <div className="flex-1 mb-8 md:mb-0">
-                        <div className="flex items-center mb-4">
-                            <div className="step-circle bg-blue-500">1</div>
-                            <h4 className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                                Select a file
-                            </h4>
-                        </div>
-                        <p className="text-gray-600 dark:text-gray-400">
-                            Choose a file to encrypt using the "Choose a file"
-                            button.
+
+            {isSmallScreen && (
+                <ToggleInstructionsButton
+                    showInstructions={showInstructions}
+                    onClick={() => setShowInstructions(!showInstructions)}
+                />
+            )}
+            {(showInstructions || !isSmallScreen) && (
+                <div className="w-full max-w-5xl mx-auto">
+                    <InstructionsLayout
+                        title="How Encryption Works"
+                        steps={[
+                            {
+                                step: 1,
+                                color: "blue",
+                                title: "Select a file",
+                                description: "Choose a file to encrypt.",
+                            },
+                            {
+                                step: 2,
+                                color: "green",
+                                title: "Encrypt",
+                                description:
+                                    'Click "Encrypt & Save" to encrypt the file.',
+                            },
+                            {
+                                step: 3,
+                                color: "yellow",
+                                title: "Save file and keys",
+                                description:
+                                    "Download the encrypted file and the keys.",
+                            },
+                            {
+                                step: 4,
+                                color: "red",
+                                title: "Store securely",
+                                description:
+                                    "Store the encryption keys securely.",
+                            },
+                        ]}
+                    />
+                </div>
+            )}
+            {showMnemonicPopup && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">
+                        <h2 className="text-2xl font-bold mb-4">
+                            Mnemonic Words
+                        </h2>
+                        <p className="mb-4">
+                            Please save the following mnemonic phrase. You will
+                            need it to decrypt your files.
                         </p>
-                    </div>
-                    <div className="flex-1 mb-8 md:mb-0">
-                        <div className="flex items-center mb-4">
-                            <div className="step-circle bg-green-500">2</div>
-                            <h4 className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                                Encrypt
-                            </h4>
+                        <div className="bg-gray-200 p-4 rounded mb-4">
+                            {myWallet.mnemonic.phrase}
                         </div>
-                        <p className="text-gray-600 dark:text-gray-400">
-                            Click the "Encrypt & Save" button to encrypt the
-                            file.
-                        </p>
-                    </div>
-                    <div className="flex-1 mb-8 md:mb-0">
-                        <div className="flex items-center mb-4">
-                            <div className="step-circle bg-yellow-500">3</div>
-                            <h4 className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                                Save file and keys
-                            </h4>
+                        <div className="mb-4">
+                            <button
+                                onClick={handleDownloadMnemonic}
+                                className="bg-blue-500 text-white px-4 py-2 rounded"
+                            >
+                                Download Mnemonic
+                            </button>
                         </div>
-                        <p className="text-gray-600 dark:text-gray-400">
-                            Download the encrypted file and the encryption keys.
-                            Without the keys, you cannot decrypt the file in the
-                            future.
-                        </p>
-                    </div>
-                    <div className="flex-1">
-                        <div className="flex items-center mb-4">
-                            <div className="step-circle bg-red-500">4</div>
-                            <h4 className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                                Store securely
-                            </h4>
+                        <div className="flex items-center">
+                            <input
+                                type="checkbox"
+                                id="confirm"
+                                className="mr-2"
+                                checked={isMnemonicConfirmed}
+                                onChange={() =>
+                                    setIsMnemonicConfirmed(!isMnemonicConfirmed)
+                                }
+                            />
+                            <label htmlFor="confirm" className="text-gray-700">
+                                I have written down the mnemonic phrase
+                            </label>
                         </div>
-                        <p className="text-gray-600 dark:text-gray-400">
-                            Store the encryption keys securely to ensure you can
-                            access your files when needed.
-                        </p>
+                        <button
+                            onClick={handleConfirmMnemonic}
+                            className="mt-4 bg-green-500 text-white px-4 py-2 rounded"
+                        >
+                            Confirm
+                        </button>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     )
 }

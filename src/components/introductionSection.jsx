@@ -1,5 +1,3 @@
-import { route } from "preact-router"
-
 export default function IntroductionSection() {
     return (
         <section

@@ -1,12 +1,12 @@
-import { h } from "preact"
 import { useState, useContext } from "preact/hooks"
-import { PeerIdContext } from "./connectionManager"
+import { PeerIdContext } from "../components/peerIdContext"
 
 export default function ConnectForm() {
     const { connectToPeer } = useContext(PeerIdContext)
     const [connectPeerId, setConnectPeerId] = useState("")
     const [errorMessage, setErrorMessage] = useState("")
-    const [isConnecting, setIsConnecting] = useState(false) // משתנה חדש כדי לעקוב אחרי מצב החיבור
+    const [isConnecting, setIsConnecting] = useState(false) 
+    const [connectionTimeout, setConnectionTimeout] = useState(null) 
 
     const handleConnect = () => {
         if (!connectPeerId) {
@@ -14,16 +14,32 @@ export default function ConnectForm() {
             return
         }
 
-        setIsConnecting(true) // עדכון המצב שהחיבור בתהליך
+        setIsConnecting(true)
+        setErrorMessage("")
+
+        const timeout = setTimeout(() => {
+            setIsConnecting(false)
+            setErrorMessage("Connection attempt timed out.")
+        }, 10000) 
+
+        setConnectionTimeout(timeout)
+
         connectToPeer(connectPeerId)
             .then(() => {
-                setIsConnecting(false) // החיבור הצליח, ניתן לאפס את המצב
+                clearTimeout(timeout)
+                setIsConnecting(false)
                 setErrorMessage("")
             })
             .catch((err) => {
-                setIsConnecting(false) // החיבור נכשל, ניתן לאפס את המצב
-                setErrorMessage("Connection failed: " + err.message)
+                clearTimeout(timeout) 
+                setIsConnecting(false)
             })
+    }
+
+    const handleCancel = () => {
+        clearTimeout(connectionTimeout) 
+        setIsConnecting(false) 
+        setErrorMessage("Connection cancelled.")
     }
 
     return (
@@ -37,15 +53,26 @@ export default function ConnectForm() {
                 onChange={(e) => setConnectPeerId(e.target.value)}
                 className="block w-full text-gray-800 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter peer ID"
-                disabled={isConnecting} // חוסם את השדה במהלך החיבור
+                disabled={isConnecting} 
             />
-            <button
-                onClick={handleConnect}
-                className={`w-full px-4 py-3 ${isConnecting ? "bg-gray-400" : "bg-gradient-to-r from-blue-600 to-blue-800"} text-white font-bold rounded-lg shadow-lg transition duration-300 mt-4`}
-                disabled={isConnecting} // חוסם את הכפתור במהלך החיבור
-            >
-                {isConnecting ? "Connecting..." : "Connect"}
-            </button>
+            <div className="flex justify-between mt-4">
+                <button
+                    onClick={handleConnect}
+                    className={`px-4 py-3 ${isConnecting ? "bg-gray-400" : "bg-gradient-to-r from-blue-600 to-blue-800"} text-white font-bold rounded-lg shadow-lg transition duration-300 w-full ${isConnecting ? "mr-4" : ""}`}
+                    disabled={isConnecting} 
+                >
+                    {isConnecting ? "Connecting..." : "Connect"}
+                </button>
+
+                {isConnecting && (
+                    <button
+                        onClick={handleCancel}
+                        className="px-4 py-3 bg-red-500 text-white font-bold rounded-lg shadow-lg transition duration-300"
+                    >
+                        Cancel
+                    </button>
+                )}
+            </div>
             {errorMessage && (
                 <p className="mt-6 text-red-500 text-lg font-semibold">
                     {errorMessage}

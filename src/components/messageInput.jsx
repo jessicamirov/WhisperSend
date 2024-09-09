@@ -1,9 +1,7 @@
-import { useState, useContext } from "preact/hooks"
+import { useState, useContext, useEffect } from "preact/hooks"
 import { FaPaperclip, FaSmile } from "react-icons/fa"
-import Picker from "@emoji-mart/react" // עדכון הייבוא
-import data from "@emoji-mart/data" // ייבוא הנתונים של האמוג'ים
+import { PeerIdContext } from "../components/peerIdContext"
 import { handleSendMessage, handleSendFile } from "../utils/chatActions"
-import { PeerIdContext } from "./connectionManager"
 import { toast } from "react-toastify"
 
 export default function MessageInput() {
@@ -20,16 +18,22 @@ export default function MessageInput() {
         isDisconnected,
         initiatedDisconnect,
     } = useContext(PeerIdContext)
-
     const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
+    useEffect(() => {
+        console.log("Connection status on load:", connection)
+        console.log("isDisconnected status on load:", isDisconnected)
+        console.log("PeerId:", peerId)
+        console.log("Recipient PeerId:", recipientPeerId)
+    }, [connection, isDisconnected, peerId, recipientPeerId])
+
     const handleEmojiSelect = (emoji) => {
-        setMessage(message + emoji.native) // הוספת האייקון להודעה
-        setShowEmojiPicker(false) // סגירת ה-Picker לאחר בחירה
+        setMessage(message + emoji.native)
+        setShowEmojiPicker(false)
     }
 
     return (
-        <div className="relative flex items-center space-x-4">
+        <div className="relative flex items-center space-x-4 mt-4">
             <input
                 type="text"
                 value={message}
@@ -72,8 +76,7 @@ export default function MessageInput() {
 
             {showEmojiPicker && (
                 <div className="absolute bottom-12 right-0">
-                    <Picker data={data} onEmojiSelect={handleEmojiSelect} />{" "}
-                    {/* שימוש ב-Emoji Picker החדש */}
+                    <Picker data={data} onEmojiSelect={handleEmojiSelect} />
                 </div>
             )}
 

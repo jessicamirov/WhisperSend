@@ -1,4 +1,3 @@
-import { h } from "preact"
 import { useState, useContext, useEffect, useRef } from "preact/hooks"
 import {
     FaSyncAlt,
@@ -7,7 +6,7 @@ import {
     FaEyeSlash,
     FaCopy,
 } from "react-icons/fa"
-import { PeerIdContext } from "./connectionManager"
+import { PeerIdContext } from "../components/peerIdContext"
 
 export default function PeerIdDisplay({
     handleInvite,
@@ -26,11 +25,11 @@ export default function PeerIdDisplay({
 
     useEffect(() => {
         const handleResize = () => {
-            setIsSmallScreen(window.innerWidth < 768) // נקודת השבירה במסך
+            setIsSmallScreen(window.innerWidth < 768) 
             if (window.innerWidth >= 768) {
-                setIsExpanded(true) // במסכים גדולים להציג הכל כברירת מחדל
+                setIsExpanded(true) 
             } else {
-                setIsExpanded(false) // במסכים קטנים להתחיל במצב Hide
+                setIsExpanded(false) 
             }
         }
 
@@ -42,7 +41,6 @@ export default function PeerIdDisplay({
         }
     }, [])
 
-    // פונקציה לגרירת טקסט
     const handleMouseDown = (e) => {
         const textElement = textRef.current
         textElement.dataset.isDragging = "true"
@@ -130,7 +128,6 @@ export default function PeerIdDisplay({
                 {!isSmallScreen && showIcons && (
                     <div className="flex items-center space-x-4">
                         {" "}
-                        {/* רווח בין הכפתורים במסך גדול */}
                         <button
                             className="focus:outline-none"
                             onClick={recalculatePeerId}

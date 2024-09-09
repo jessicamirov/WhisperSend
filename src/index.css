@@ -1,14 +1,11 @@
-/* ./src/style/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Smooth Scrolling */
 html {
   scroll-behavior: smooth;
 }
 
-/* Parallax Background */
 .parallax {
   background-attachment: fixed;
   background-size: cover;
@@ -82,4 +79,23 @@ html {
     padding: 10px 15px;
     margin-left: 10px;
     cursor: pointer;
+}
+.bg-blue-500 {
+  background-color: #3b82f6;
+}
+
+.bg-green-500 {
+  background-color: #10b981;
+}
+
+.bg-yellow-500 {
+  background-color: #f59e0b;
+}
+
+.bg-red-500 {
+  background-color: #ef4444;
+}
+
+.bg-purple-500 {
+  background-color: #a855f7;
 }

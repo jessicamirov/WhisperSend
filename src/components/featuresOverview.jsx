@@ -1,5 +1,3 @@
-// FeaturesOverview.jsx
-import { h } from "preact"
 import { route } from "preact-router"
 
 export default function FeaturesOverview() {

@@ -1,21 +1,23 @@
 import { useContext } from "preact/hooks"
-import { PeerIdContext } from "./connectionManager"
+import { PeerIdContext } from "./peerIdContext"
 
 export default function ChatMessages() {
     const { messages, peerId } = useContext(PeerIdContext)
 
     const handleDownload = (msg) => {
-        console.log("URL received:", msg.url) // הדפסת ה-URL שהתקבל
         const link = document.createElement("a")
-        link.href = msg.url // השתמש ב-URL של הקובץ המוצפן
-        link.download = msg.content // שם הקובץ להורדה
+        link.href = msg.url
+        link.download = msg.content
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
     }
 
     return (
-        <div className="bg-gray-100 dark:bg-gray-700 rounded-xl p-4 overflow-y-auto h-96 mb-4">
+        <div
+            className="bg-gray-100 dark:bg-gray-700 rounded-xl p-4 overflow-y-auto mb-4"
+            style={{ height: "70vh", width: "100%" }} 
+        >
             {messages.map((msg, index) => (
                 <div
                     key={index}

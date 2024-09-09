@@ -92,6 +92,7 @@ export const PeerIdProvider = ({ children }) => {
 
                     con.on("close", () => {
                         if (!initiatedDisconnect) {
+                            console.log("95")
                             handleRemoteDisconnect()
                         }
                     })
@@ -133,6 +134,8 @@ export const PeerIdProvider = ({ children }) => {
                             draggable: true,
                             progress: undefined,
                         })
+                        console.log("137")
+                        handleRemoteDisconnect(true, recId, true)
                         reject(new Error("Connection rejected by peer"))
                     } else if (parsedData.type === "disconnect-notify") {
                         handleRemoteDisconnect(true, parsedData.peerId)
@@ -142,8 +145,12 @@ export const PeerIdProvider = ({ children }) => {
                 })
 
                 con.on("close", () => {
-                    if (!initiatedDisconnect) {
-                        handleRemoteDisconnect(false)
+                    if (!initiatedDisconnect && !rejected) {
+                        console.log("149 - רגיל")
+                        handleRemoteDisconnect()
+                    } else if (rejected) {
+                        console.log("149 - דחיית חיבור")
+                        handleRemoteDisconnect(true, recId, true) 
                     }
                 })
             })
@@ -156,15 +163,15 @@ export const PeerIdProvider = ({ children }) => {
     }
 
     const disconnect = (initiatedByUser = false) => {
+        if (initiatedByUser) {
+            setInitiatedDisconnect(true)
+        }
+
         if (connection) {
             connection.send(
                 JSON.stringify({ type: "disconnect-notify", peerId }),
             )
-            connection.send(JSON.stringify({ type: "disconnect" }))
-        }
-
-        if (initiatedByUser) {
-            setInitiatedDisconnect(true)
+            connection.close() 
         }
 
         performDisconnect()
@@ -178,6 +185,7 @@ export const PeerIdProvider = ({ children }) => {
         setRecipientPeerId("")
         setMessages([])
         setMessage("")
+        setInitiatedDisconnect(false) 
 
         route("/shareSecurely")
     }
@@ -185,7 +193,12 @@ export const PeerIdProvider = ({ children }) => {
     const handleRemoteDisconnect = (
         notify = true,
         disconnectedPeerId = peerId,
+        rejected = false,
     ) => {
+        console.log(notify, disconnectedPeerId, rejected)
+        if (initiatedDisconnect || rejected) {
+            return 
+        }
         if (notify) {
             openConfirmModal(
                 "Peer Disconnected",
@@ -198,7 +211,7 @@ export const PeerIdProvider = ({ children }) => {
                     setShowExitButton(true)
                 }
             })
-        } else if (!initiatedDisconnect) {
+        } else {
             performDisconnect()
         }
     }
@@ -231,6 +244,7 @@ export const PeerIdProvider = ({ children }) => {
 
             if (parsedData.type === "disconnect") {
                 if (!initiatedDisconnect) {
+                    console.log("247")
                     handleRemoteDisconnect()
                 }
             } else if (parsedData.messageType === "file") {

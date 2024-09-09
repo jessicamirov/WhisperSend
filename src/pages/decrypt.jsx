@@ -1,8 +1,10 @@
-import { useContext, useState } from "preact/hooks"
+import { useContext, useState, useEffect } from "preact/hooks"
 import { ethers } from "ethers"
 import { decryptFile } from "../utils/encryption"
 import { Buffer } from "buffer"
-import { PeerIdContext } from "../components/connectionManager"
+import { PeerIdContext } from "../components/peerIdContext"
+import InstructionsLayout from "../components/InstructionsLayout"
+import ToggleInstructionsButton from "../components/ToggleInstructionsButton"
 
 export default function Decrypt() {
     const { myWallet } = useContext(PeerIdContext)
@@ -11,6 +13,56 @@ export default function Decrypt() {
     const [useCustomMnemonic, setUseCustomMnemonic] = useState(false)
     const [message, setMessage] = useState("")
     const [isDecrypted, setIsDecrypted] = useState(false)
+    const [showInstructions, setShowInstructions] = useState(false)
+    const [isSmallScreen, setIsSmallScreen] = useState(false)
+    const [showMnemonicPopup, setShowMnemonicPopup] = useState(false)
+    const [isMnemonicConfirmed, setIsMnemonicConfirmed] = useState(false)
+
+    const decryptionSteps = [
+        {
+            step: 1,
+            color: "blue",
+            title: "Upload an encrypted file",
+            description: "Choose an encrypted file to decrypt.",
+        },
+        {
+            step: 2,
+            color: "green",
+            title: "Enter encryption key",
+            description: "Enter the encryption key or use your mnemonic.",
+        },
+        {
+            step: 3,
+            color: "yellow",
+            title: "Decrypt",
+            description: 'Click the "Decrypt" button to decrypt the file.',
+        },
+        {
+            step: 4,
+            color: "red",
+            title: "Download decrypted file",
+            description:
+                "Download the decrypted file once the process is complete.",
+        },
+    ]
+
+    useEffect(() => {
+        const mnemonicShown = sessionStorage.getItem("mnemonicSaved")
+        if (!mnemonicShown) {
+            setShowMnemonicPopup(true) 
+        }
+    }, [])
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsSmallScreen(window.innerWidth < 768) 
+        }
+
+        window.addEventListener("resize", handleResize)
+        handleResize() 
+
+        return () => window.removeEventListener("resize", handleResize)
+    }, [])
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0])
@@ -66,9 +118,29 @@ export default function Decrypt() {
         }
     }
 
+    const handleDownloadMnemonic = () => {
+        const blob = new Blob([myWallet.mnemonic.phrase], {
+            type: "text/plain",
+        })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.href = url
+        link.download = "mnemonic.txt"
+        link.click()
+    }
+
+    const handleConfirmMnemonic = () => {
+        if (isMnemonicConfirmed) {
+            sessionStorage.setItem("mnemonicSaved", "true") 
+            setShowMnemonicPopup(false)
+        } else {
+            alert("Please confirm that you have saved your mnemonic.")
+        }
+    }
+
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-gray-800 dark:to-gray-900">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-5xl transform transition duration-500 hover:scale-105 mb-8">
+        <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-gray-800 dark:to-gray-900 relative">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-5xl mx-auto mb-8">
                 <h2 className="text-4xl font-extrabold text-gray-800 dark:text-gray-200 mb-6">
                     Self-Decryption
                 </h2>
@@ -82,44 +154,6 @@ export default function Decrypt() {
                         className="block w-full text-gray-800 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
-                <div className="mb-6">
-                    <label className="block text-gray-700 dark:text-gray-300 mb-2">
-                        Use custom mnemonic:
-                    </label>
-                    <input
-                        type="checkbox"
-                        checked={useCustomMnemonic}
-                        onChange={() =>
-                            setUseCustomMnemonic(!useCustomMnemonic)
-                        }
-                        className="mr-2"
-                    />
-                </div>
-                {useCustomMnemonic && (
-                    <>
-                        <div className="mb-6">
-                            <label className="block text-gray-700 dark:text-gray-300 mb-2">
-                                Mnemonic Phrase:
-                            </label>
-                            <input
-                                type="text"
-                                value={mnemonic}
-                                onChange={(e) => setMnemonic(e.target.value)}
-                                className="block w-full text-gray-800 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-                        <div className="mb-6">
-                            <label className="block text-gray-700 dark:text-gray-300 mb-2">
-                                Upload Mnemonic File:
-                            </label>
-                            <input
-                                type="file"
-                                onChange={(e) => handleMnemonicFileUpload(e)}
-                                className="block w-full text-gray-800 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-                    </>
-                )}
                 <button
                     onClick={handleDecrypt}
                     className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white font-bold rounded-lg shadow-lg hover:from-blue-700 hover:to-blue-900 transition duration-300"
@@ -131,64 +165,65 @@ export default function Decrypt() {
                         {message}
                     </p>
                 )}
-                <div className="bg-white dark:bg-gray-800 p-10 rounded-xl shadow-2xl w-full max-w-5xl transform transition duration-500 hover:scale-105">
-                    <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
-                        How Decryption Works
-                    </h3>
-                    <div className="flex flex-col md:flex-row md:justify-between md:space-x-6">
-                        <div className="flex-1 mb-8 md:mb-0">
-                            <div className="flex items-center mb-4">
-                                <div className="step-circle bg-blue-500">1</div>
-                                <h4 className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                                    Upload an encrypted file
-                                </h4>
-                            </div>
-                            <p className="text-gray-600 dark:text-gray-400">
-                                Choose an encrypted file to decrypt using the
-                                "Upload an encrypted file" button.
-                            </p>
+            </div>
+            {isSmallScreen && (
+                <ToggleInstructionsButton
+                    showInstructions={showInstructions}
+                    onClick={() => setShowInstructions(!showInstructions)}
+                />
+            )}
+            {(showInstructions || !isSmallScreen) && (
+                <div className="w-full max-w-5xl mx-auto">
+                    <InstructionsLayout
+                        title="How Decryption Works"
+                        steps={decryptionSteps}
+                    />
+                </div>
+            )}
+            {showMnemonicPopup && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">
+                        <h2 className="text-2xl font-bold mb-4">
+                            Mnemonic Words
+                        </h2>
+                        <p className="mb-4">
+                            Please save the following mnemonic phrase. You will
+                            need it to decrypt your files.
+                        </p>
+                        <div className="bg-gray-200 p-4 rounded mb-4">
+                            {myWallet.mnemonic.phrase}
                         </div>
-                        <div className="flex-1 mb-8 md:mb-0">
-                            <div className="flex items-center mb-4">
-                                <div className="step-circle bg-green-500">
-                                    2
-                                </div>
-                                <h4 className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                                    Enter encryption key
-                                </h4>
-                            </div>
-                            <p className="text-gray-600 dark:text-gray-400">
-                                Enter the encryption key to decrypt the file.
-                            </p>
+                        <div className="mb-4">
+                            <button
+                                onClick={handleDownloadMnemonic}
+                                className="bg-blue-500 text-white px-4 py-2 rounded"
+                            >
+                                Download Mnemonic
+                            </button>
                         </div>
-                        <div className="flex-1 mb-8 md:mb-0">
-                            <div className="flex items-center mb-4">
-                                <div className="step-circle bg-yellow-500">
-                                    3
-                                </div>
-                                <h4 className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                                    Decrypt
-                                </h4>
-                            </div>
-                            <p className="text-gray-600 dark:text-gray-400">
-                                Click the "Decrypt" button to decrypt the file.
-                            </p>
+                        <div className="flex items-center">
+                            <input
+                                type="checkbox"
+                                id="confirm"
+                                className="mr-2"
+                                checked={isMnemonicConfirmed}
+                                onChange={() =>
+                                    setIsMnemonicConfirmed(!isMnemonicConfirmed)
+                                }
+                            />
+                            <label htmlFor="confirm" className="text-gray-700">
+                                I have written down the mnemonic phrase
+                            </label>
                         </div>
-                        <div className="flex-1">
-                            <div className="flex items-center mb-4">
-                                <div className="step-circle bg-red-500">4</div>
-                                <h4 className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                                    Download decrypted file
-                                </h4>
-                            </div>
-                            <p className="text-gray-600 dark:text-gray-400">
-                                Download the decrypted file once the decryption
-                                is complete.
-                            </p>
-                        </div>
+                        <button
+                            onClick={handleConfirmMnemonic}
+                            className="mt-4 bg-green-500 text-white px-4 py-2 rounded"
+                        >
+                            Confirm
+                        </button>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     )
 }
