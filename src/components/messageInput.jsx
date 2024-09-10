@@ -20,13 +20,6 @@ export default function MessageInput() {
     } = useContext(PeerIdContext);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-    useEffect(() => {
-        console.log("Connection status on load:", connection);
-        console.log("isDisconnected status on load:", isDisconnected);
-        console.log("PeerId:", peerId);
-        console.log("Recipient PeerId:", recipientPeerId);
-    }, [connection, isDisconnected, peerId, recipientPeerId]);
-
     const handleEmojiSelect = (emoji) => {
         setMessage(message + emoji.native);
         setShowEmojiPicker(false);

@@ -8,7 +8,7 @@ import { Router } from "preact-router"
 import { PeerIdProvider, PeerIdContext } from "./components/peerIdContext"
 import { ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
-import MnemonicPopup from "./utils/MnemonicPopup"
+import MnemonicPopup from "./utils/mnemonicPopup"
 import { useEffect, useState, useContext } from "preact/hooks"
 
 export function App() {

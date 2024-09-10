@@ -25,17 +25,32 @@ export const handleSendMessage = ({
     setMessages,
     setMessage,
 }) => {
+    if (!message || !recipientPeerId || !myWallet || !myWallet.privateKey) {
+        console.log("recipientPeerId:::")
+        console.log(recipientPeerId)
+        console.error("Missing parameters for encryption or sending message.")
+        return
+    }
+
     if (connection && connection.open) {
         const { encrypted, nonce } = encryptText(
             message,
             recipientPeerId,
             myWallet.privateKey,
         )
+
+        // בדיקה אם ההצפנה נכשלה
+        if (!encrypted || !nonce) {
+            console.error("Encryption failed, cannot send message.")
+            return
+        }
+
         const encMessage = JSON.stringify({
             messageType: "text",
             encrypted,
             nonce,
         })
+
         connection.send(encMessage)
         setMessages([
             ...messages,
@@ -48,6 +63,7 @@ export const handleSendMessage = ({
         console.error("Connection is not open, cannot send message.")
     }
 }
+
 
 export const handleSendFile = async ({
     e,

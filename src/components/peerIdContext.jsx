@@ -1,51 +1,51 @@
-import { createContext } from "preact";
-import { useState, useEffect } from "preact/hooks";
-import Peer from "peerjs";
-import { handleReceiveMessage, handleReceiveFile } from "../utils/chatActions";
-import { peerConfig } from "../utils/config";
-import { ethers } from "ethers";
-import ConfirmModal from "../utils/confirmModal";
-import { route } from "preact-router";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { createContext } from "preact"
+import { useState, useEffect } from "preact/hooks"
+import Peer from "peerjs"
+import { handleReceiveMessage, handleReceiveFile } from "../utils/chatActions"
+import { peerConfig } from "../utils/config"
+import { ethers } from "ethers"
+import ConfirmModal from "../utils/confirmModal"
+import { route } from "preact-router"
+import { toast } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 
-export const PeerIdContext = createContext();
+export const PeerIdContext = createContext()
 
-let localInitiatedDisconnect = false; // משתנה גלובלי למעקב אחרי יוזמת הניתוק
-let localRejected = false; // משתנה גלובלי למעקב אחרי דחיית החיבור
-let connectionCancelled = false; // משתנה למעקב אחרי ביטול חיבור
+let localInitiatedDisconnect = false // משתנה גלובלי למעקב אחרי יוזמת הניתוק
+let localRejected = false // משתנה גלובלי למעקב אחרי דחיית החיבור
+let connectionCancelled = false // משתנה למעקב אחרי ביטול חיבור
 
 export const PeerIdProvider = ({ children }) => {
-    const [peer, setPeer] = useState(null);
-    const [connection, setConnection] = useState(null);
-    const [recipient, setRecipient] = useState("");
-    const [messages, setMessages] = useState([]);
-    const [message, setMessage] = useState("");
-    const [myWallet, setMyWallet] = useState(null);
-    const [recipientPeerId, setRecipientPeerId] = useState("");
-    const [peerId, setPeerId] = useState("");
-    const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const [confirmCallback, setConfirmCallback] = useState(null);
+    const [peer, setPeer] = useState(null)
+    const [connection, setConnection] = useState(null)
+    const [recipient, setRecipient] = useState("")
+    const [messages, setMessages] = useState([])
+    const [message, setMessage] = useState("")
+    const [myWallet, setMyWallet] = useState(null)
+    const [recipientPeerId, setRecipientPeerId] = useState("")
+    const [peerId, setPeerId] = useState("")
+    const [showConfirmModal, setShowConfirmModal] = useState(false)
+    const [confirmCallback, setConfirmCallback] = useState(null)
     const [confirmModalData, setConfirmModalData] = useState({
         title: "",
         message: "",
-    });
-    const [isDisconnected, setIsDisconnected] = useState(false);
-    const [initiatedDisconnect, setInitiatedDisconnect] = useState(false);
-    const [showExitButton, setShowExitButton] = useState(false);
+    })
+    const [isDisconnected, setIsDisconnected] = useState(false)
+    const [initiatedDisconnect, setInitiatedDisconnect] = useState(false)
+    const [showExitButton, setShowExitButton] = useState(false)
 
     const recalculatePeerId = () => {
-        const newWallet = ethers.Wallet.createRandom();
-        const { publicKey } = newWallet;
-        setMyWallet(newWallet);
-        setPeerId(publicKey);
+        const newWallet = ethers.Wallet.createRandom()
+        const { publicKey } = newWallet
+        setMyWallet(newWallet)
+        setPeerId(publicKey)
 
         if (peer) {
-            peer.destroy();
+            peer.destroy()
         }
 
-        const newPeer = new Peer(publicKey, peerConfig);
-        setPeer(newPeer);
+        const newPeer = new Peer(publicKey, peerConfig)
+        setPeer(newPeer)
 
         toast.success("Peer ID has been recalculated successfully!", {
             position: "top-right",
@@ -55,79 +55,87 @@ export const PeerIdProvider = ({ children }) => {
             pauseOnHover: true,
             draggable: true,
             progress: undefined,
-        });
-    };
+        })
+    }
 
     useEffect(() => {
-        const newWallet = ethers.Wallet.createRandom();
-        const { publicKey } = newWallet;
-        setMyWallet(newWallet);
-        setPeerId(publicKey);
-    }, []);
+        const newWallet = ethers.Wallet.createRandom()
+        const { publicKey } = newWallet
+        setMyWallet(newWallet)
+        setPeerId(publicKey)
+    }, [])
 
     useEffect(() => {
-        if (!myWallet) return;
+        if (!myWallet) return
 
-        const pr = new Peer(myWallet.publicKey, peerConfig);
-        setPeer(pr);
+        const pr = new Peer(myWallet.publicKey, peerConfig)
+        setPeer(pr)
 
         return () => {
-            pr.destroy();
-        };
-    }, [myWallet]);
+            pr.destroy()
+        }
+    }, [myWallet])
 
     useEffect(() => {
-        if (!peer) return;
+        if (!peer) return
 
         peer.on("connection", (con) => {
+            // הצד המקבל מעדכן את recipientPeerId
+            setRecipientPeerId(con.peer)
+
             con.on("data", (data) => {
-                const parsedData = JSON.parse(data);
-        
+                const parsedData = JSON.parse(data)
+
                 if (parsedData.type === "connection-cancelled") {
                     // קלט הודעת ביטול חיבור
-                    connectionCancelled = true;
-                    toast.error("The peer has cancelled the connection.");
-                    con.close(); // סגירת החיבור
-                    return;
+                    connectionCancelled = true
+                    toast.error("The peer has cancelled the connection.")
+                    con.close() // סגירת החיבור
+                    return
                 }
-            });
-        
+            })
+
             // בדיקת קבלת החיבור לאחר אישור
-            openConfirmModal("Incoming Connection", `Do you want to accept the connection request from ${con.peer}?`)
-            .then((accepted) => {
+            openConfirmModal(
+                "Incoming Connection",
+                `Do you want to accept the connection request from ${con.peer}?`,
+            ).then((accepted) => {
                 if (accepted) {
                     if (connectionCancelled) {
                         // אם החיבור בוטל על ידי הצד השני, לא ממשיכים
-                        toast.error("The peer has cancelled the connection.");
-                        return; // עצירה כאן
+                        toast.error("The peer has cancelled the connection.")
+                        return // עצירה כאן
                     }
-                    con.send(JSON.stringify({ type: "connection-accepted" }));
-                    setConnection(con);
-                    setRecipient(con.peer);
-                    route(`/chat/${con.peer}`);
-        
-                    con.on("data", (data) => handleData(data, con.peer));
-                    con.on("close", () => handleRemoteDisconnect(false, con.peer));
+                    con.send(JSON.stringify({ type: "connection-accepted" }))
+                    setConnection(con)
+                    setRecipient(con.peer)
+                    route(`/chat/${con.peer}`)
+
+                    con.on("data", (data) => handleData(data, con.peer))
+                    con.on("close", () =>
+                        handleRemoteDisconnect(false, con.peer),
+                    )
                 } else {
-                    localRejected = true;
-                    con.send(JSON.stringify({ type: "connection-rejected" }));
-                    con.close();
+                    localRejected = true
+                    con.send(JSON.stringify({ type: "connection-rejected" }))
+                    con.close()
                 }
-            });
-        });
-        
-    }, [peer]);
+            })
+        })
+    }, [peer])
 
     const safelyCloseConnection = () => {
         if (connection) {
-            connection.send(JSON.stringify({ type: "disconnect-notify", peerId }));
-            connection.close();
+            connection.send(
+                JSON.stringify({ type: "disconnect-notify", peerId }),
+            )
+            connection.close()
         }
-    };
+    }
 
     const connectToPeer = (recId) => {
         return new Promise((resolve, reject) => {
-            const con = peer.connect(recId);
+            const con = peer.connect(recId)
 
             toast.info("Awaiting approval from the other user...", {
                 position: "top-right",
@@ -135,161 +143,181 @@ export const PeerIdProvider = ({ children }) => {
                 closeOnClick: false,
                 draggable: false,
                 progress: undefined,
-            });
+            })
 
             con.on("open", () => {
+                console.log("open !!!!!!!!!!!!")
                 con.on("data", function (data) {
-                    const parsedData = JSON.parse(data);
+                    const parsedData = JSON.parse(data)
                     if (parsedData.type === "connection-accepted") {
                         if (connectionCancelled) {
-                            toast.error("You have cancelled the connection.");
-                            safelyCloseConnection();
-                            performDisconnect(); // השארת המשתמש בעמוד shareSecurely
-                            return;
+                            toast.error("You have cancelled the connection.")
+                            safelyCloseConnection()
+                            performDisconnect() // השארת המשתמש בעמוד shareSecurely
+                            return
                         }
 
-                        setConnection(con);
-                        setRecipientPeerId(recId);
-                        toast.dismiss();
-                        route(`/chat/${recId}`);
-                        resolve();
+                        setConnection(con)
+                        setRecipientPeerId(recId)
+                        toast.dismiss()
+                        route(`/chat/${recId}`)
+                        resolve()
                     } else if (parsedData.type === "connection-rejected") {
-                        localRejected = true; // עדכון משתנה גלובלי
-                        toast.dismiss();
+                        localRejected = true // עדכון משתנה גלובלי
+                        toast.dismiss()
                         toast.error("Connection was rejected by the peer.", {
                             position: "top-right",
                             autoClose: 5000,
                             closeOnClick: true,
                             draggable: true,
                             progress: undefined,
-                        });
+                        })
                         console.log("168")
 
                         // handleRemoteDisconnect(true, recId, true);
-                        reject(new Error("Connection rejected by peer"));
+                        reject(new Error("Connection rejected by peer"))
                     } else if (parsedData.type === "disconnect-notify") {
                         console.log("173")
 
-                        handleRemoteDisconnect(false, parsedData.peerId);
+                        handleRemoteDisconnect(false, parsedData.peerId)
                     } else {
-                        handleData(data, recId);
+                        handleData(data, recId)
                     }
-                });
+                })
 
                 con.on("close", () => {
                     if (!localInitiatedDisconnect && !localRejected) {
                         console.log("183")
-                        handleRemoteDisconnect(false, recId);
+                        handleRemoteDisconnect(false, recId)
                     }
-                });
-            });
+                })
+            })
 
             con.on("error", (err) => {
-                toast.dismiss();
-                reject(err);
-            });
-        });
-    };
+                toast.dismiss()
+                reject(err)
+            })
+        })
+    }
 
     const cancelConnection = () => {
-        connectionCancelled = true; // עדכון המשתנה לביטול החיבור
-        safelyCloseConnection();
-        performDisconnect(); // ביטול מיידי והשארה בעמוד shareSecurely
-    };
+        connectionCancelled = true // עדכון המשתנה לביטול החיבור
+        safelyCloseConnection()
+        performDisconnect() // ביטול מיידי והשארה בעמוד shareSecurely
+    }
 
     const disconnect = (initiatedByUser = false) => {
-        localInitiatedDisconnect = initiatedByUser;
+        localInitiatedDisconnect = initiatedByUser
         if (initiatedByUser) {
-            setInitiatedDisconnect(true);
+            setInitiatedDisconnect(true)
         }
 
-        safelyCloseConnection();
-        performDisconnect();
-    };
+        safelyCloseConnection()
+        performDisconnect()
+    }
 
     const performDisconnect = () => {
-        setIsDisconnected(true);
-        safelyCloseConnection();
-        setConnection(null);
-        setRecipient("");
-        setRecipientPeerId("");
-        setMessages([]);
-        setMessage("");
-        setInitiatedDisconnect(false);
-        localInitiatedDisconnect = false; // איפוס המשתנה הגלובלי
-        localRejected = false; // איפוס דחיית החיבור
-        connectionCancelled = false; // איפוס ביטול החיבור
-        route("/shareSecurely");
-    };
+        setIsDisconnected(true)
+        safelyCloseConnection()
+        setConnection(null)
+        setRecipient("")
+        setRecipientPeerId("")
+        setMessages([])
+        setMessage("")
+        setInitiatedDisconnect(false)
+        localInitiatedDisconnect = false // איפוס המשתנה הגלובלי
+        localRejected = false // איפוס דחיית החיבור
+        connectionCancelled = false // איפוס ביטול החיבור
+        route("/shareSecurely")
+    }
 
-    const handleRemoteDisconnect = (rejected = false, disconnectedPeerId = peerId) => {
+    const handleRemoteDisconnect = (
+        rejected = false,
+        disconnectedPeerId = peerId,
+    ) => {
         if (rejected || localRejected || localInitiatedDisconnect) {
             // אם החיבור נדחה או שהמשתמש יזם את הניתוק, נבצע ניתוק מידי
-            performDisconnect();
+            performDisconnect()
         } else {
             // אם המשתמש לא יזם את הניתוק, נבקש ממנו אישור להמשיך
             openConfirmModal(
                 "Peer Disconnected",
-                `${disconnectedPeerId || "The other user"} has left the chat. Do you want to leave the chat as well?`
+                `${disconnectedPeerId || "The other user"} has left the chat. Do you want to leave the chat as well?`,
             ).then((confirmed) => {
                 if (confirmed) {
-                    performDisconnect();
+                    performDisconnect()
                 } else {
-                    setIsDisconnected(true); // משתמש נשאר בצ'אט אך מנותק
-                    setShowExitButton(true); // מציג כפתור יציאה אם הוא רוצה לעזוב מאוחר יותר
+                    setIsDisconnected(true) // משתמש נשאר בצ'אט אך מנותק
+                    setShowExitButton(true) // מציג כפתור יציאה אם הוא רוצה לעזוב מאוחר יותר
                 }
-            });
+            })
         }
-    };
+    }
 
     const handleExit = () => {
-        setMessages([]);
-        setMessage("");
-        route("/shareSecurely");
-    };
+        setMessages([])
+        setMessage("")
+        route("/shareSecurely")
+    }
 
     const openConfirmModal = (title, message) => {
         return new Promise((resolve) => {
-            setConfirmCallback(() => resolve);
-            setConfirmModalData({ title, message });
-            setShowConfirmModal(true);
-        });
-    };
+            setConfirmCallback(() => resolve)
+            setConfirmModalData({ title, message })
+            setShowConfirmModal(true)
+        })
+    }
 
     const closeConfirmModal = (confirmed) => {
-        setShowConfirmModal(false);
+        setShowConfirmModal(false)
         if (confirmCallback) {
-            confirmCallback(confirmed);
+            confirmCallback(confirmed)
         }
-    };
+    }
 
     const handleData = (data, senderPeerId) => {
         try {
-            const parsedData = JSON.parse(data);
+            const parsedData = JSON.parse(data)
             if (parsedData.type === "disconnect") {
                 if (!initiatedDisconnect) {
-                    handleRemoteDisconnect();
+                    handleRemoteDisconnect()
                 }
             } else if (parsedData.type === "connection-cancelled") {
                 console.log("278")
                 // הודעת הביטול תגרום לסגירת החיבור ולמנוע המשך
-                closeConfirmModal(false);
-                toast.info("The connection was cancelled by the other user.");
-                safelyCloseConnection();
-                performDisconnect(); // מונע התחברות נוספת
+                closeConfirmModal(false)
+                toast.info("The connection was cancelled by the other user.")
+                safelyCloseConnection()
+                performDisconnect() // מונע התחברות נוספת
             } else if (parsedData.messageType === "file") {
-                handleReceiveFile(messages, setMessages, myWallet.privateKey, senderPeerId, parsedData, openConfirmModal);
+                handleReceiveFile(
+                    messages,
+                    setMessages,
+                    myWallet.privateKey,
+                    senderPeerId,
+                    parsedData,
+                    openConfirmModal,
+                )
             } else if (parsedData.messageType === "text") {
-                handleReceiveMessage(setMessages, myWallet.privateKey, senderPeerId, data);
+                handleReceiveMessage(
+                    setMessages,
+                    myWallet.privateKey,
+                    senderPeerId,
+                    data,
+                )
             } else {
-                console.log("Unknown messageType received");
+                console.log("Unknown messageType received")
             }
         } catch (error) {
-            console.log("Error parsing data:", error);
-            handleReceiveMessage(setMessages, myWallet.privateKey, senderPeerId, data);
+            console.log("Error parsing data:", error)
+            handleReceiveMessage(
+                setMessages,
+                myWallet.privateKey,
+                senderPeerId,
+                data,
+            )
         }
-    };
-    
+    }
 
     return (
         <PeerIdContext.Provider
@@ -326,5 +354,5 @@ export const PeerIdProvider = ({ children }) => {
                 />
             )}
         </PeerIdContext.Provider>
-    );
-};
+    )
+}
