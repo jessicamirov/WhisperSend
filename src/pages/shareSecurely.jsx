@@ -4,7 +4,7 @@ import PeerIdDisplay from "../components/peerIdDisplay"
 import ConnectForm from "../components/connectForm"
 import Invitation from "../components/invitation"
 import InstructionsLayout from "../components/InstructionsLayout"
-import ToggleInstructionsButton from "../components/ToggleInstructionsButton" 
+import ToggleInstructionsButton from "../components/ToggleInstructionsButton"
 
 const secureChatSteps = [
     {
@@ -36,12 +36,12 @@ const secureChatSteps = [
 ]
 
 export default function ShareSecurely() {
-    const { peerId, myWallet } = useContext(PeerIdContext) 
+    const { peerId, myWallet } = useContext(PeerIdContext)
     const [isInviteOpen, setIsInviteOpen] = useState(false)
     const [showInstructions, setShowInstructions] = useState(false)
     const [isSmallScreen, setIsSmallScreen] = useState(false)
-    const [showMnemonicPopup, setShowMnemonicPopup] = useState(false) 
-    const [isMnemonicConfirmed, setIsMnemonicConfirmed] = useState(false) 
+    const [showMnemonicPopup, setShowMnemonicPopup] = useState(false)
+    const [isMnemonicConfirmed, setIsMnemonicConfirmed] = useState(false)
 
     useEffect(() => {
         const handleResize = () => {
@@ -56,10 +56,17 @@ export default function ShareSecurely() {
 
     useEffect(() => {
         const isMnemonicSaved = sessionStorage.getItem("mnemonicSaved")
-        if (!isMnemonicSaved) {
+        const isMnemonicConfirmed = sessionStorage.getItem("mnemonicConfirmed")
+
+        // בדיקה אם כבר ה-mnemonic נשמר ואושר, כדי להציג את הפופ-אפ רק פעם אחת
+        if (
+            !isMnemonicSaved &&
+            !isMnemonicConfirmed &&
+            myWallet?.mnemonic?.phrase
+        ) {
             setShowMnemonicPopup(true)
         }
-    }, [])
+    }, [myWallet])
 
     const toggleInviteModal = () => {
         setIsInviteOpen(!isInviteOpen)
@@ -89,8 +96,9 @@ export default function ShareSecurely() {
 
     const handleConfirmMnemonic = () => {
         if (isMnemonicConfirmed) {
-            sessionStorage.setItem("mnemonicSaved", "true") 
-            setShowMnemonicPopup(false) 
+            sessionStorage.setItem("mnemonicSaved", "true")
+            sessionStorage.setItem("mnemonicConfirmed", "true")
+            setShowMnemonicPopup(false)
         } else {
             alert("Please confirm that you have saved your mnemonic.")
         }
@@ -98,6 +106,7 @@ export default function ShareSecurely() {
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-gray-800 dark:to-gray-900 relative">
+            {/* הצגת פופ-אפ Mnemonic אם לא אושר בעבר */}
             {showMnemonicPopup && (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">

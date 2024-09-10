@@ -47,19 +47,19 @@ export default function Decrypt() {
     ]
 
     useEffect(() => {
-        const mnemonicShown = sessionStorage.getItem("mnemonicSaved")
-        if (!mnemonicShown) {
-            setShowMnemonicPopup(true) 
+        const isMnemonicSaved = sessionStorage.getItem("mnemonicSaved")
+        if (!isMnemonicSaved) {
+            setShowMnemonicPopup(true)
         }
     }, [])
 
     useEffect(() => {
         const handleResize = () => {
-            setIsSmallScreen(window.innerWidth < 768) 
+            setIsSmallScreen(window.innerWidth < 768)
         }
 
         window.addEventListener("resize", handleResize)
-        handleResize() 
+        handleResize()
 
         return () => window.removeEventListener("resize", handleResize)
     }, [])
@@ -131,7 +131,7 @@ export default function Decrypt() {
 
     const handleConfirmMnemonic = () => {
         if (isMnemonicConfirmed) {
-            sessionStorage.setItem("mnemonicSaved", "true") 
+            sessionStorage.setItem("mnemonicSaved", "true")
             setShowMnemonicPopup(false)
         } else {
             alert("Please confirm that you have saved your mnemonic.")

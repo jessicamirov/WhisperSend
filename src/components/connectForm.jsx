@@ -20,10 +20,12 @@ export default function ConnectForm() {
         setIsConnecting(true)
         setErrorMessage("")
 
+        // Sets a 3 minute timeout for the connection attempt. If it fails, stops the connection
+        // and shows an error message.
         const timeout = setTimeout(() => {
             setIsConnecting(false)
             setErrorMessage("Connection attempt timed out.")
-        }, 10000) 
+        }, 180000)
 
         setConnectionTimeout(timeout)
 
@@ -34,7 +36,7 @@ export default function ConnectForm() {
                 setErrorMessage("")
             })
             .catch((err) => {
-                clearTimeout(timeout) 
+                clearTimeout(timeout)
                 setIsConnecting(false)
             })
     }

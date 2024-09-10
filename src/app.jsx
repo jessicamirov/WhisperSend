@@ -19,16 +19,17 @@ export function App() {
     const [isLoadingMnemonic, setIsLoadingMnemonic] = useState(true)
 
     useEffect(() => {
+        const isMnemonicSaved = sessionStorage.getItem("mnemonicSaved")
+        const isMnemonicConfirmed = sessionStorage.getItem("mnemonicConfirmed")
+
+        // אם זה טעינת עמוד מחדש - איפוס נתונים
         if (
             performance.navigation.type === performance.navigation.TYPE_RELOAD
         ) {
             console.log("Page reload detected, clearing sessionStorage.")
             sessionStorage.removeItem("mnemonicSaved")
-            sessionStorage.removeItem("mnemonicConfirmed") 
+            sessionStorage.removeItem("mnemonicConfirmed")
         }
-
-        const isMnemonicSaved = sessionStorage.getItem("mnemonicSaved")
-        const isMnemonicConfirmed = sessionStorage.getItem("mnemonicConfirmed")
 
         console.log("Mnemonic saved in sessionStorage:", isMnemonicSaved)
         console.log(
@@ -37,6 +38,7 @@ export function App() {
         )
         console.log("Current path:", currentPath)
 
+        // בדיקת סטטוס שמירת ה-mnemonic
         if (myWallet?.mnemonic?.phrase) {
             if (!isMnemonicSaved && !isMnemonicConfirmed) {
                 console.log(
@@ -57,8 +59,6 @@ export function App() {
                     "Mnemonic already confirmed. No need to show the popup.",
                 )
             }
-
-            console.log("Mnemonic loaded:", myWallet.mnemonic.phrase)
             setIsLoadingMnemonic(false)
         } else {
             console.log("Waiting for myWallet...")
@@ -68,7 +68,7 @@ export function App() {
     const handleConfirmMnemonic = () => {
         console.log("Mnemonic confirmed by user.")
         sessionStorage.setItem("mnemonicSaved", "true")
-        sessionStorage.setItem("mnemonicConfirmed", "true") 
+        sessionStorage.setItem("mnemonicConfirmed", "true")
         setShowMnemonicPopup(false)
     }
 
@@ -88,6 +88,7 @@ export function App() {
                     <ChatPage path="/chat/:connectPeerId" />
                 </Router>
             </Layout>
+            {/* הצגת ה-popup של ה-Mnemonic רק אם לא נטען קודם */}
             {showMnemonicPopup && !isLoadingMnemonic && myWallet && (
                 <MnemonicPopup
                     mnemonic={myWallet.mnemonic.phrase}

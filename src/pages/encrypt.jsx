@@ -2,7 +2,7 @@ import { useEffect, useContext, useState } from "preact/hooks"
 import { Buffer } from "buffer"
 import { encryptFile } from "../utils/encryption"
 import { PeerIdContext } from "../components/peerIdContext"
-import ToggleInstructionsButton from "../components/ToggleInstructionsButton" 
+import ToggleInstructionsButton from "../components/ToggleInstructionsButton"
 import InstructionsLayout from "../components/InstructionsLayout"
 
 export default function Encrypt() {
@@ -12,24 +12,24 @@ export default function Encrypt() {
     const [isMnemonicConfirmed, setIsMnemonicConfirmed] = useState(false)
     const [showMnemonicPopup, setShowMnemonicPopup] = useState(false)
     const [isEncrypted, setIsEncrypted] = useState(false)
-    const [showInstructions, setShowInstructions] = useState(false) 
-    const [isSmallScreen, setIsSmallScreen] = useState(false) 
+    const [showInstructions, setShowInstructions] = useState(false)
+    const [isSmallScreen, setIsSmallScreen] = useState(false)
 
     useEffect(() => {
         const handleResize = () => {
-            setIsSmallScreen(window.innerWidth < 768) 
+            setIsSmallScreen(window.innerWidth < 768)
         }
 
         window.addEventListener("resize", handleResize)
-        handleResize() 
+        handleResize()
 
         return () => window.removeEventListener("resize", handleResize)
     }, [])
 
     useEffect(() => {
-        const mnemonicShown = sessionStorage.getItem("mnemonicSaved")
-        if (!mnemonicShown) {
-            setShowMnemonicPopup(true) 
+        const isMnemonicSaved = sessionStorage.getItem("mnemonicSaved")
+        if (!isMnemonicSaved) {
+            setShowMnemonicPopup(true)
         }
     }, [])
 
@@ -52,8 +52,8 @@ export default function Encrypt() {
 
     const handleConfirmMnemonic = () => {
         if (isMnemonicConfirmed) {
-            sessionStorage.setItem("mnemonicSaved", "true") 
-            setShowMnemonicPopup(false) 
+            sessionStorage.setItem("mnemonicSaved", "true")
+            setShowMnemonicPopup(false)
         } else {
             alert("Please confirm that you have saved your mnemonic.")
         }
