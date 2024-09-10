@@ -154,6 +154,32 @@ export default function Decrypt() {
                         className="block w-full text-gray-800 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
+                <div className="mb-6">
+                    <label className="block text-gray-700 dark:text-gray-300 mb-2">
+                        Use custom mnemonic:
+                    </label>
+                    <input
+                        type="checkbox"
+                        checked={useCustomMnemonic}
+                        onChange={() =>
+                            setUseCustomMnemonic(!useCustomMnemonic)
+                        }
+                        className="mr-2"
+                    />
+                </div>
+                {useCustomMnemonic && (
+                    <div className="mb-6">
+                        <label className="block text-gray-700 dark:text-gray-300 mb-2">
+                            Mnemonic Phrase:
+                        </label>
+                        <input
+                            type="text"
+                            value={mnemonic}
+                            onChange={(e) => setMnemonic(e.target.value)}
+                            className="block w-full text-gray-800 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                )}
                 <button
                     onClick={handleDecrypt}
                     className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white font-bold rounded-lg shadow-lg hover:from-blue-700 hover:to-blue-900 transition duration-300"
