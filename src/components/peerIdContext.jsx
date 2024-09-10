@@ -80,46 +80,42 @@ export const PeerIdProvider = ({ children }) => {
         if (!peer) return;
 
         peer.on("connection", (con) => {
-            setRecipientPeerId(con.peer);
-
-            openConfirmModal(
-                "Incoming Connection",
-                `Do you want to accept the connection request from ${con.peer}?`
-            ).then((accepted) => {
+            con.on("data", (data) => {
+                const parsedData = JSON.parse(data);
+        
+                if (parsedData.type === "connection-cancelled") {
+                    // קלט הודעת ביטול חיבור
+                    connectionCancelled = true;
+                    toast.error("The peer has cancelled the connection.");
+                    con.close(); // סגירת החיבור
+                    return;
+                }
+            });
+        
+            // בדיקת קבלת החיבור לאחר אישור
+            openConfirmModal("Incoming Connection", `Do you want to accept the connection request from ${con.peer}?`)
+            .then((accepted) => {
                 if (accepted) {
                     if (connectionCancelled) {
-                        console.log("92")
-                        console.log(connectionCancelled)
-                        // אם החיבור בוטל על ידי הצד השני
+                        // אם החיבור בוטל על ידי הצד השני, לא ממשיכים
                         toast.error("The peer has cancelled the connection.");
-                        safelyCloseConnection();
-                        performDisconnect(); // ביצוע ניתוק והשארת המשתמש ב-shareSecurely
-                        return;
+                        return; // עצירה כאן
                     }
-                    
                     con.send(JSON.stringify({ type: "connection-accepted" }));
                     setConnection(con);
                     setRecipient(con.peer);
                     route(`/chat/${con.peer}`);
-
+        
                     con.on("data", (data) => handleData(data, con.peer));
-
-                    con.on("close", () => {
-                        if (!localInitiatedDisconnect && !localRejected) {
-                            console.log("107")
-                            handleRemoteDisconnect(false, con.peer);
-                        } else if (localRejected) {
-                            console.log("110")
-                            handleRemoteDisconnect(true, con.peer, true);
-                        }
-                    });
+                    con.on("close", () => handleRemoteDisconnect(false, con.peer));
                 } else {
-                    localRejected = true; // עדכון משתנה גלובלי לדחיית חיבור
+                    localRejected = true;
                     con.send(JSON.stringify({ type: "connection-rejected" }));
                     con.close();
                 }
             });
         });
+        
     }, [peer]);
 
     const safelyCloseConnection = () => {
@@ -272,13 +268,15 @@ export const PeerIdProvider = ({ children }) => {
             const parsedData = JSON.parse(data);
             if (parsedData.type === "disconnect") {
                 if (!initiatedDisconnect) {
-                    console.log("273")
-
                     handleRemoteDisconnect();
                 }
             } else if (parsedData.type === "connection-cancelled") {
+                console.log("278")
+                // הודעת הביטול תגרום לסגירת החיבור ולמנוע המשך
                 closeConfirmModal(false);
                 toast.info("The connection was cancelled by the other user.");
+                safelyCloseConnection();
+                performDisconnect(); // מונע התחברות נוספת
             } else if (parsedData.messageType === "file") {
                 handleReceiveFile(messages, setMessages, myWallet.privateKey, senderPeerId, parsedData, openConfirmModal);
             } else if (parsedData.messageType === "text") {
@@ -291,6 +289,7 @@ export const PeerIdProvider = ({ children }) => {
             handleReceiveMessage(setMessages, myWallet.privateKey, senderPeerId, data);
         }
     };
+    
 
     return (
         <PeerIdContext.Provider
