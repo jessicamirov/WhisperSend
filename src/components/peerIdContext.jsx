@@ -13,6 +13,7 @@ export const PeerIdContext = createContext();
 
 let localInitiatedDisconnect = false; // משתנה גלובלי למעקב אחרי יוזמת הניתוק
 let localRejected = false; // משתנה גלובלי למעקב אחרי דחיית החיבור
+let connectionCancelled = false; // משתנה למעקב אחרי ביטול חיבור
 
 export const PeerIdProvider = ({ children }) => {
     const [peer, setPeer] = useState(null);
@@ -86,6 +87,16 @@ export const PeerIdProvider = ({ children }) => {
                 `Do you want to accept the connection request from ${con.peer}?`
             ).then((accepted) => {
                 if (accepted) {
+                    if (connectionCancelled) {
+                        console.log("92")
+                        console.log(connectionCancelled)
+                        // אם החיבור בוטל על ידי הצד השני
+                        toast.error("The peer has cancelled the connection.");
+                        safelyCloseConnection();
+                        performDisconnect(); // ביצוע ניתוק והשארת המשתמש ב-shareSecurely
+                        return;
+                    }
+                    
                     con.send(JSON.stringify({ type: "connection-accepted" }));
                     setConnection(con);
                     setRecipient(con.peer);
@@ -95,10 +106,10 @@ export const PeerIdProvider = ({ children }) => {
 
                     con.on("close", () => {
                         if (!localInitiatedDisconnect && !localRejected) {
-                            console.log("The peer disconnected. Rejected status: " + localRejected);
+                            console.log("107")
                             handleRemoteDisconnect(false, con.peer);
                         } else if (localRejected) {
-                            console.log("Connection was rejected. No need for confirmation dialog.");
+                            console.log("110")
                             handleRemoteDisconnect(true, con.peer, true);
                         }
                     });
@@ -134,6 +145,13 @@ export const PeerIdProvider = ({ children }) => {
                 con.on("data", function (data) {
                     const parsedData = JSON.parse(data);
                     if (parsedData.type === "connection-accepted") {
+                        if (connectionCancelled) {
+                            toast.error("You have cancelled the connection.");
+                            safelyCloseConnection();
+                            performDisconnect(); // השארת המשתמש בעמוד shareSecurely
+                            return;
+                        }
+
                         setConnection(con);
                         setRecipientPeerId(recId);
                         toast.dismiss();
@@ -149,9 +167,13 @@ export const PeerIdProvider = ({ children }) => {
                             draggable: true,
                             progress: undefined,
                         });
-                        handleRemoteDisconnect(true, recId, true);
+                        console.log("168")
+
+                        // handleRemoteDisconnect(true, recId, true);
                         reject(new Error("Connection rejected by peer"));
                     } else if (parsedData.type === "disconnect-notify") {
+                        console.log("173")
+
                         handleRemoteDisconnect(false, parsedData.peerId);
                     } else {
                         handleData(data, recId);
@@ -160,6 +182,7 @@ export const PeerIdProvider = ({ children }) => {
 
                 con.on("close", () => {
                     if (!localInitiatedDisconnect && !localRejected) {
+                        console.log("183")
                         handleRemoteDisconnect(false, recId);
                     }
                 });
@@ -170,6 +193,12 @@ export const PeerIdProvider = ({ children }) => {
                 reject(err);
             });
         });
+    };
+
+    const cancelConnection = () => {
+        connectionCancelled = true; // עדכון המשתנה לביטול החיבור
+        safelyCloseConnection();
+        performDisconnect(); // ביטול מיידי והשארה בעמוד shareSecurely
     };
 
     const disconnect = (initiatedByUser = false) => {
@@ -193,6 +222,7 @@ export const PeerIdProvider = ({ children }) => {
         setInitiatedDisconnect(false);
         localInitiatedDisconnect = false; // איפוס המשתנה הגלובלי
         localRejected = false; // איפוס דחיית החיבור
+        connectionCancelled = false; // איפוס ביטול החיבור
         route("/shareSecurely");
     };
 
@@ -242,6 +272,8 @@ export const PeerIdProvider = ({ children }) => {
             const parsedData = JSON.parse(data);
             if (parsedData.type === "disconnect") {
                 if (!initiatedDisconnect) {
+                    console.log("273")
+
                     handleRemoteDisconnect();
                 }
             } else if (parsedData.type === "connection-cancelled") {
@@ -265,6 +297,7 @@ export const PeerIdProvider = ({ children }) => {
             value={{
                 peer,
                 connectToPeer,
+                cancelConnection, // נוספה פונקציה לביטול חיבור
                 disconnect,
                 connection,
                 recipient,
