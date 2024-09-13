@@ -3,8 +3,9 @@ import { ethers } from "ethers"
 import { decryptFile } from "../utils/encryption"
 import { Buffer } from "buffer"
 import { PeerIdContext } from "../components/peerIdContext"
-import InstructionsLayout from "../components/InstructionsLayout"
-import ToggleInstructionsButton from "../components/ToggleInstructionsButton"
+import InstructionsLayout from "../components/instructionsLayout"
+import ToggleInstructionsButton from "../components/toggleInstructionsButton"
+
 
 export default function Decrypt() {
     const { myWallet } = useContext(PeerIdContext)

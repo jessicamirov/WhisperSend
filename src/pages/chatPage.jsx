@@ -2,8 +2,9 @@ import { useState, useEffect } from "preact/hooks"
 import ChatLayout from "../components/chatLayout"
 import ChatMessages from "../components/chatMessages"
 import MessageInput from "../components/messageInput"
-import InstructionsLayout from "../components/InstructionsLayout"
-import ToggleInstructionsButton from "../components/ToggleInstructionsButton" 
+import InstructionsLayout from "../components/instructionsLayout"
+import ToggleInstructionsButton from "../components/toggleInstructionsButton"
+
 
 const chatInstructions = [
     {

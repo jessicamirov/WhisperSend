@@ -3,8 +3,8 @@ import { PeerIdContext } from "../components/peerIdContext"
 import PeerIdDisplay from "../components/peerIdDisplay"
 import ConnectForm from "../components/connectForm"
 import Invitation from "../components/invitation"
-import InstructionsLayout from "../components/InstructionsLayout"
-import ToggleInstructionsButton from "../components/ToggleInstructionsButton"
+import InstructionsLayout from "../components/instructionsLayout"
+import ToggleInstructionsButton from "../components/toggleInstructionsButton"
 
 const secureChatSteps = [
     {

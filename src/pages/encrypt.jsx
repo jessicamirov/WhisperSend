@@ -2,8 +2,9 @@ import { useEffect, useContext, useState } from "preact/hooks"
 import { Buffer } from "buffer"
 import { encryptFile } from "../utils/encryption"
 import { PeerIdContext } from "../components/peerIdContext"
-import ToggleInstructionsButton from "../components/ToggleInstructionsButton"
-import InstructionsLayout from "../components/InstructionsLayout"
+import InstructionsLayout from "../components/instructionsLayout"
+import ToggleInstructionsButton from "../components/toggleInstructionsButton"
+
 
 export default function Encrypt() {
     const { myWallet } = useContext(PeerIdContext)
