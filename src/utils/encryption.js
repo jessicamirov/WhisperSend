@@ -52,8 +52,6 @@ export const encryptText = (text, recipientPublicKey, senderPrivateKey) => {
     }
 }
 
-
-
 export const decryptText = (
     encryptedMessage,
     senderPublicKey,
@@ -105,7 +103,6 @@ export const decryptText = (
     }
 }
 
-
 export const encryptFile = (file, recipientPublicKey, senderPrivateKey) => {
     const sharedSecret = getSharedSecret(recipientPublicKey, senderPrivateKey)
 
@@ -119,7 +116,7 @@ export const encryptFile = (file, recipientPublicKey, senderPrivateKey) => {
     return {
         nonce: Buffer.from(nonce).toString("hex"),
         encrypted: Buffer.from(encrypted).toString("hex"),
-        type: file.type, 
+        type: file.type,
     }
 }
 

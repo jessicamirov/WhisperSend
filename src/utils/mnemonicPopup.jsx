@@ -17,8 +17,8 @@ export default function MnemonicPopup({ mnemonic, onConfirm }) {
             <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">
                 <h2 className="text-2xl font-bold mb-4">Mnemonic Words</h2>
                 <p className="mb-4">
-                    Please save the following mnemonic phrase. 
-                    You will need it to decrypt your files.
+                    Please save the following mnemonic phrase. You will need it
+                    to decrypt your files.
                 </p>
                 <div className="bg-gray-200 p-4 rounded mb-4">{mnemonic}</div>
                 <div className="mb-4">

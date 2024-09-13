@@ -9,6 +9,7 @@ import sendSound from "../assets/whisper.mp3"
 import { Buffer } from "buffer"
 
 let encryptFileCounter = 1
+let globalMessageCount = 0
 
 export const playSendSound = () => {
     const audio = new Audio(sendSound)
@@ -64,7 +65,6 @@ export const handleSendMessage = ({
     }
 }
 
-
 export const handleSendFile = async ({
     e,
     connection,
@@ -85,22 +85,28 @@ export const handleSendFile = async ({
         reader.onload = async (event) => {
             const fileBuffer = Buffer.from(event.target.result)
             let encMessage
-            let fileName = selectedFile.name
+            let fileName
 
             if (confirmEncrypt) {
+                // קובץ מוצפן, שמירת סוג הקובץ כחלק מה- nonce
                 const encryptedFileData = encryptFile(
                     fileBuffer,
                     recipientPeerId,
                     myWallet.privateKey,
                 )
-                encMessage = JSON.stringify(encryptedFileData)
-                fileName = `encrypted${encryptFileCounter++}${fileName.substring(
-                    fileName.lastIndexOf("."),
-                )}.txt`
+                encMessage = JSON.stringify({
+                    nonce: encryptedFileData.nonce,
+                    encrypted: encryptedFileData.encrypted,
+                    fileType: selectedFile.type, // שמירת סוג הקובץ
+                })
+                fileName = `encrypted${encryptFileCounter++}.txt` // הקובץ המוצפן תמיד יהיה .txt
             } else {
+                // קובץ לא מוצפן שומר על הסיומת המקורית
                 encMessage = fileBuffer.toString("hex")
+                fileName = selectedFile.name // שימוש בשם והסיומת המקוריים
             }
 
+            // שליחת הקובץ
             connection.send(
                 JSON.stringify({
                     messageType: "file",
@@ -109,16 +115,19 @@ export const handleSendFile = async ({
                 }),
             )
 
+            // יצירת URL עבור הקובץ שנשלח לשולח עצמו (הקובץ המקורי אם הוא לא מוצפן)
             const fileURL = URL.createObjectURL(
-                new Blob([encMessage], {
-                    type: confirmEncrypt ? "text/plain" : selectedFile.type,
+                new Blob([confirmEncrypt ? encMessage : event.target.result], {
+                    type: selectedFile.type,
                 }),
             )
 
+            // הצגת שם הקובץ בצ'אט
             const displayName = confirmEncrypt
-                ? fileName
-                : `${fileName} (Not Encrypted)`
+                ? fileName // קובץ מוצפן תמיד יקבל שם בפורמט encryptedX.txt
+                : fileName // קובץ לא מוצפן שומר על שמו המקורי
 
+            // עדכון הודעות עם הקובץ שנשלח
             setMessages([
                 ...messages,
                 {
@@ -132,6 +141,7 @@ export const handleSendFile = async ({
         }
         reader.readAsArrayBuffer(selectedFile)
 
+        // איפוס בחירת הקובץ לאחר השליחה
         e.target.value = null
     }
 }
@@ -165,30 +175,36 @@ export const handleReceiveFile = async (
     let fileName = data.fileName
     let encrypted = false
 
+    globalMessageCount++ // העלאת המספר הסידורי עבור כל הודעה חדשה
+
     if (!fileName) {
         console.error("Received file without a valid name.")
         return
     }
 
+    // בדיקה אם הקובץ נשלח כקובץ מוצפן או לא מוצפן
     if (
         typeof data.data === "string" &&
         data.data.length % 2 === 0 &&
         /^[0-9a-f]+$/i.test(data.data)
     ) {
+        // קובץ לא מוצפן, שמירה כקובץ כפי שהוא
         const fileBuffer = Buffer.from(data.data, "hex")
         const blob = new Blob([fileBuffer], {
             type: "application/octet-stream",
         })
         fileURL = URL.createObjectURL(blob)
-        toast.success("File received!")
+        fileName = `${fileName}` // שימוש במספר סידורי ייחודי
+        toast.success("Unencrypted file received!")
     } else {
+        // קובץ מוצפן עם nonce
         const parsedData = JSON.parse(data.data)
-        const { nonce, encrypted: encryptedData, type } = parsedData
+        const { nonce, encrypted: encryptedData, fileType } = parsedData
 
         const fileBuffer = Buffer.from(encryptedData, "hex")
         fileURL = URL.createObjectURL(
             new Blob([fileBuffer], {
-                type: type || "application/octet-stream",
+                type: "application/octet-stream",
             }),
         )
         encrypted = true
@@ -199,7 +215,22 @@ export const handleReceiveFile = async (
             "Do you want to decrypt the received file?",
         )
 
-        if (shouldDecrypt) {
+        if (!shouldDecrypt) {
+            const jsonContent = JSON.stringify(
+                {
+                    nonce,
+                    encrypted: encryptedData,
+                },
+                null,
+                2,
+            )
+            const blob = new Blob([jsonContent], {
+                type: "application/json",
+            })
+            fileURL = URL.createObjectURL(blob)
+            fileName = `encrypted${globalMessageCount}.txt` // שימוש במספר סידורי ייחודי עבור קובץ מוצפן
+            toast.success("Encrypted file saved as JSON with nonce.")
+        } else {
             const decryptedBlob = decryptFile(
                 data.data,
                 senderPublicKey,
@@ -207,9 +238,7 @@ export const handleReceiveFile = async (
             )
             if (decryptedBlob) {
                 fileURL = URL.createObjectURL(decryptedBlob)
-                fileName = fileName
-                    .replace("encrypted", "decrypted")
-                    .replace(".txt", "")
+                fileName = `decrypted${globalMessageCount}.${fileType.split("/").pop()}` // שימוש בסיומת מתוך fileType ושם ייחודי
                 toast.success("File decrypted!")
             } else {
                 console.error("File decryption failed.")
@@ -218,19 +247,14 @@ export const handleReceiveFile = async (
         }
     }
 
-    const fileAlreadyExists = messages.some(
-        (msg) => msg.content === fileName && msg.type === "file",
-    )
-    if (!fileAlreadyExists) {
-        setMessages((prevMessages) => [
-            ...prevMessages,
-            {
-                sender: "Peer",
-                content: fileName,
-                type: "file",
-                url: fileURL,
-                encrypted,
-            },
-        ])
-    }
+    setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+            sender: "Peer",
+            content: fileName,
+            type: "file",
+            url: fileURL,
+            encrypted,
+        },
+    ])
 }

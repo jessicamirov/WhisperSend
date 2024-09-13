@@ -275,21 +275,26 @@ export const PeerIdProvider = ({ children }) => {
         }
     }
 
-    const handleData = (data, senderPeerId) => {
-        try {
+const handleData = (data, senderPeerId) => {
+    console.log("Received data:", data)
+
+    try {
+        // בדיקה אם מדובר בקובץ בינארי (ArrayBuffer או Blob)
+        if (data instanceof ArrayBuffer || data instanceof Blob) {
+            console.log("Received unencrypted file in binary format.")
+            handleReceiveFile(
+                messages,
+                setMessages,
+                myWallet.privateKey,
+                senderPeerId,
+                { fileName: "received_file", data }, // נתונים בינאריים
+                openConfirmModal,
+            )
+        } else {
+            // אם מדובר בנתונים שמגיעים כ-JSON, ננתח אותם כ-JSON
             const parsedData = JSON.parse(data)
-            if (parsedData.type === "disconnect") {
-                if (!initiatedDisconnect) {
-                    handleRemoteDisconnect()
-                }
-            } else if (parsedData.type === "connection-cancelled") {
-                console.log("278")
-                // הודעת הביטול תגרום לסגירת החיבור ולמנוע המשך
-                closeConfirmModal(false)
-                toast.info("The connection was cancelled by the other user.")
-                safelyCloseConnection()
-                performDisconnect() // מונע התחברות נוספת
-            } else if (parsedData.messageType === "file") {
+
+            if (parsedData.messageType === "file") {
                 handleReceiveFile(
                     messages,
                     setMessages,
@@ -308,16 +313,20 @@ export const PeerIdProvider = ({ children }) => {
             } else {
                 console.log("Unknown messageType received")
             }
-        } catch (error) {
-            console.log("Error parsing data:", error)
-            handleReceiveMessage(
-                setMessages,
-                myWallet.privateKey,
-                senderPeerId,
-                data,
-            )
         }
+    } catch (error) {
+        console.error("Error parsing data:", error)
+        handleReceiveMessage(
+            setMessages,
+            myWallet.privateKey,
+            senderPeerId,
+            data,
+        )
     }
+}
+
+
+
 
     return (
         <PeerIdContext.Provider
