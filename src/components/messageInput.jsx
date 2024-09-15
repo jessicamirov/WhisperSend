@@ -5,7 +5,7 @@ import data from "@emoji-mart/data"
 import { handleSendMessage, handleSendFile } from "../utils/chatActions"
 import { PeerIdContext } from "../components/peerIdContext"
 import { toast } from "react-toastify"
-//
+
 export default function MessageInput() {
     const {
         connection,
