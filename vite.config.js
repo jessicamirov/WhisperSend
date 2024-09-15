@@ -51,5 +51,5 @@ export default defineConfig({
             ],
         },
     },
-    base: "./", // Use relative paths for assets in production
+    base: "/", // Use relative paths for assets in production
 })
