@@ -11,9 +11,9 @@ import "react-toastify/dist/ReactToastify.css"
 
 export const PeerIdContext = createContext()
 
-let localInitiatedDisconnect = false // משתנה גלובלי למעקב אחרי יוזמת הניתוק
-let localRejected = false // משתנה גלובלי למעקב אחרי דחיית החיבור
-let connectionCancelled = false // משתנה למעקב אחרי ביטול חיבור
+let localInitiatedDisconnect = false
+let localRejected = false
+let connectionCancelled = false
 
 export const PeerIdProvider = ({ children }) => {
     const [peer, setPeer] = useState(null)
@@ -80,31 +80,27 @@ export const PeerIdProvider = ({ children }) => {
         if (!peer) return
 
         peer.on("connection", (con) => {
-            // הצד המקבל מעדכן את recipientPeerId
             setRecipientPeerId(con.peer)
 
             con.on("data", (data) => {
                 const parsedData = JSON.parse(data)
 
                 if (parsedData.type === "connection-cancelled") {
-                    // קלט הודעת ביטול חיבור
                     connectionCancelled = true
                     toast.error("The peer has cancelled the connection.")
-                    con.close() // סגירת החיבור
+                    con.close()
                     return
                 }
             })
 
-            // בדיקת קבלת החיבור לאחר אישור
             openConfirmModal(
                 "Incoming Connection",
                 `Do you want to accept the connection request from ${con.peer}?`,
             ).then((accepted) => {
                 if (accepted) {
                     if (connectionCancelled) {
-                        // אם החיבור בוטל על ידי הצד השני, לא ממשיכים
                         toast.error("The peer has cancelled the connection.")
-                        return // עצירה כאן
+                        return
                     }
                     con.send(JSON.stringify({ type: "connection-accepted" }))
                     setConnection(con)
@@ -146,14 +142,13 @@ export const PeerIdProvider = ({ children }) => {
             })
 
             con.on("open", () => {
-                console.log("open !!!!!!!!!!!!")
                 con.on("data", function (data) {
                     const parsedData = JSON.parse(data)
                     if (parsedData.type === "connection-accepted") {
                         if (connectionCancelled) {
                             toast.error("You have cancelled the connection.")
                             safelyCloseConnection()
-                            performDisconnect() // השארת המשתמש בעמוד shareSecurely
+                            performDisconnect()
                             return
                         }
 
@@ -163,7 +158,7 @@ export const PeerIdProvider = ({ children }) => {
                         route(`/chat/${recId}`)
                         resolve()
                     } else if (parsedData.type === "connection-rejected") {
-                        localRejected = true // עדכון משתנה גלובלי
+                        localRejected = true
                         toast.dismiss()
                         toast.error("Connection was rejected by the peer.", {
                             position: "top-right",
@@ -174,7 +169,6 @@ export const PeerIdProvider = ({ children }) => {
                         })
                         console.log("168")
 
-                        // handleRemoteDisconnect(true, recId, true);
                         reject(new Error("Connection rejected by peer"))
                     } else if (parsedData.type === "disconnect-notify") {
                         console.log("173")
@@ -201,9 +195,9 @@ export const PeerIdProvider = ({ children }) => {
     }
 
     const cancelConnection = () => {
-        connectionCancelled = true // עדכון המשתנה לביטול החיבור
+        connectionCancelled = true
         safelyCloseConnection()
-        performDisconnect() // ביטול מיידי והשארה בעמוד shareSecurely
+        performDisconnect()
     }
 
     const disconnect = (initiatedByUser = false) => {
@@ -225,9 +219,9 @@ export const PeerIdProvider = ({ children }) => {
         setMessages([])
         setMessage("")
         setInitiatedDisconnect(false)
-        localInitiatedDisconnect = false // איפוס המשתנה הגלובלי
-        localRejected = false // איפוס דחיית החיבור
-        connectionCancelled = false // איפוס ביטול החיבור
+        localInitiatedDisconnect = false
+        localRejected = false
+        connectionCancelled = false
         route("/shareSecurely")
     }
 
@@ -236,10 +230,8 @@ export const PeerIdProvider = ({ children }) => {
         disconnectedPeerId = peerId,
     ) => {
         if (rejected || localRejected || localInitiatedDisconnect) {
-            // אם החיבור נדחה או שהמשתמש יזם את הניתוק, נבצע ניתוק מידי
             performDisconnect()
         } else {
-            // אם המשתמש לא יזם את הניתוק, נבקש ממנו אישור להמשיך
             openConfirmModal(
                 "Peer Disconnected",
                 `${disconnectedPeerId || "The other user"} has left the chat. Do you want to leave the chat as well?`,
@@ -247,8 +239,8 @@ export const PeerIdProvider = ({ children }) => {
                 if (confirmed) {
                     performDisconnect()
                 } else {
-                    setIsDisconnected(true) // משתמש נשאר בצ'אט אך מנותק
-                    setShowExitButton(true) // מציג כפתור יציאה אם הוא רוצה לעזוב מאוחר יותר
+                    setIsDisconnected(true)
+                    setShowExitButton(true)
                 }
             })
         }
@@ -275,65 +267,59 @@ export const PeerIdProvider = ({ children }) => {
         }
     }
 
-const handleData = (data, senderPeerId) => {
-    console.log("Received data:", data)
+    const handleData = (data, senderPeerId) => {
+        console.log("Received data:", data)
 
-    try {
-        // בדיקה אם מדובר בקובץ בינארי (ArrayBuffer או Blob)
-        if (data instanceof ArrayBuffer || data instanceof Blob) {
-            console.log("Received unencrypted file in binary format.")
-            handleReceiveFile(
-                messages,
-                setMessages,
-                myWallet.privateKey,
-                senderPeerId,
-                { fileName: "received_file", data }, // נתונים בינאריים
-                openConfirmModal,
-            )
-        } else {
-            // אם מדובר בנתונים שמגיעים כ-JSON, ננתח אותם כ-JSON
-            const parsedData = JSON.parse(data)
-
-            if (parsedData.messageType === "file") {
+        try {
+            if (data instanceof ArrayBuffer || data instanceof Blob) {
+                console.log("Received unencrypted file in binary format.")
                 handleReceiveFile(
                     messages,
                     setMessages,
                     myWallet.privateKey,
                     senderPeerId,
-                    parsedData,
+                    { fileName: "received_file", data },
                     openConfirmModal,
                 )
-            } else if (parsedData.messageType === "text") {
-                handleReceiveMessage(
-                    setMessages,
-                    myWallet.privateKey,
-                    senderPeerId,
-                    data,
-                )
             } else {
-                console.log("Unknown messageType received")
+                const parsedData = JSON.parse(data)
+
+                if (parsedData.messageType === "file") {
+                    handleReceiveFile(
+                        messages,
+                        setMessages,
+                        myWallet.privateKey,
+                        senderPeerId,
+                        parsedData,
+                        openConfirmModal,
+                    )
+                } else if (parsedData.messageType === "text") {
+                    handleReceiveMessage(
+                        setMessages,
+                        myWallet.privateKey,
+                        senderPeerId,
+                        data,
+                    )
+                } else {
+                    console.log("Unknown messageType received")
+                }
             }
+        } catch (error) {
+            console.error("Error parsing data:", error)
+            handleReceiveMessage(
+                setMessages,
+                myWallet.privateKey,
+                senderPeerId,
+                data,
+            )
         }
-    } catch (error) {
-        console.error("Error parsing data:", error)
-        handleReceiveMessage(
-            setMessages,
-            myWallet.privateKey,
-            senderPeerId,
-            data,
-        )
     }
-}
-
-
-
-
     return (
         <PeerIdContext.Provider
             value={{
                 peer,
                 connectToPeer,
-                cancelConnection, // נוספה פונקציה לביטול חיבור
+                cancelConnection,
                 disconnect,
                 connection,
                 recipient,

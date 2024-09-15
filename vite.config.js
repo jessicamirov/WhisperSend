@@ -13,5 +13,5 @@ export default defineConfig({
             buffer: "buffer",
         },
     },
-    base: "./", // הגדרה של base כדי לוודא שהקבצים ייטענו נכון גם בתיקיות יחסיות
+    base: "./",
 })

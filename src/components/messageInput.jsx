@@ -1,7 +1,9 @@
-import { useState, useContext, useEffect } from "preact/hooks"
+import { useState, useContext } from "preact/hooks"
 import { FaPaperclip, FaSmile } from "react-icons/fa"
-import { PeerIdContext } from "../components/peerIdContext"
+import Picker from "@emoji-mart/react" 
+import data from "@emoji-mart/data"
 import { handleSendMessage, handleSendFile } from "../utils/chatActions"
+import { PeerIdContext } from "../components/peerIdContext"
 import { toast } from "react-toastify"
 
 export default function MessageInput() {
@@ -18,6 +20,7 @@ export default function MessageInput() {
         isDisconnected,
         initiatedDisconnect,
     } = useContext(PeerIdContext)
+
     const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
     const handleEmojiSelect = (emoji) => {
@@ -26,7 +29,7 @@ export default function MessageInput() {
     }
 
     return (
-        <div className="relative flex items-center space-x-4 mt-4">
+        <div className="relative flex items-center space-x-4">
             <input
                 type="text"
                 value={message}
@@ -69,7 +72,7 @@ export default function MessageInput() {
 
             {showEmojiPicker && (
                 <div className="absolute bottom-12 right-0">
-                    <Picker data={data} onEmojiSelect={handleEmojiSelect} />
+                    <Picker data={data} onEmojiSelect={handleEmojiSelect} />{" "}
                 </div>
             )}
 
@@ -99,7 +102,7 @@ export default function MessageInput() {
                     })
                 }}
                 className={`px-4 py-3 bg-blue-500 text-white font-bold rounded-lg shadow-lg hover:bg-blue-600 transition duration-300 ${isDisconnected ? "cursor-not-allowed opacity-50" : ""}`}
-                disabled={isDisconnected || initiatedDisconnect} // השבתת הכפתור אם המצב מנותק
+                disabled={isDisconnected || initiatedDisconnect}
             >
                 Send
             </button>

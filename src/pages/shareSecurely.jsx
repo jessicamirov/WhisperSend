@@ -58,7 +58,6 @@ export default function ShareSecurely() {
         const isMnemonicSaved = sessionStorage.getItem("mnemonicSaved")
         const isMnemonicConfirmed = sessionStorage.getItem("mnemonicConfirmed")
 
-        // בדיקה אם כבר ה-mnemonic נשמר ואושר, כדי להציג את הפופ-אפ רק פעם אחת
         if (
             !isMnemonicSaved &&
             !isMnemonicConfirmed &&
@@ -106,7 +105,6 @@ export default function ShareSecurely() {
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-gray-800 dark:to-gray-900 relative">
-            {/* הצגת פופ-אפ Mnemonic אם לא אושר בעבר */}
             {showMnemonicPopup && (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">
