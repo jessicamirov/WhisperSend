@@ -16,17 +16,17 @@ const Home = () => (
         <h2 className="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-8">Choose your desired action:</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="p-6 bg-white dark:bg-gray-700 rounded-lg shadow-lg cursor-pointer hover:bg-gray-300" onClick={() => route('/encrypt')}>
-            <img src="/src/assets/encrypt.png" alt="Encrypt Files" className="mx-auto mb-4 w-16 h-16" />
+            <img src="/public/assets/encrypt.png" alt="Encrypt Files" className="mx-auto mb-4 w-16 h-16" />
             <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Encrypt Files</h3>
             <p className="text-gray-600 dark:text-gray-400">Keep your files on your device secure and protected from unauthorized access</p>
           </div>
           <div className="p-6 bg-white dark:bg-gray-700 rounded-lg shadow-lg cursor-pointer hover:bg-gray-300" onClick={() => route('/decrypt')}>
-            <img src="/src/assets/decrypt.png" alt="Decrypt Files" className="mx-auto mb-4 w-16 h-16" />
+            <img src="/public/assets/decrypt.png" alt="Decrypt Files" className="mx-auto mb-4 w-16 h-16" />
             <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Decrypt Files</h3>
             <p className="text-gray-600 dark:text-gray-400"> Only you can access your confidential files</p>
           </div>
           <div className="p-6 bg-white dark:bg-gray-700 rounded-lg shadow-lg cursor-pointer hover:bg-gray-300" onClick={() => route('/share-securely')}>
-            <img src="/src/assets/securechat.png" alt="Share Securely" className="mx-auto mb-4 w-16 h-16" />
+            <img src="/public/assets/securechat.png" alt="Share Securely" className="mx-auto mb-4 w-16 h-16" />
             <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Secure Chat</h3>
             <p className="text-gray-600 dark:text-gray-400">Chat and send files securely</p>
           </div>

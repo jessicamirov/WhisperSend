@@ -50,7 +50,7 @@ export default function Home() {
               onClick={() => route("/encrypt")}
             >
               <img
-                src="/src/assets/encrypt.png"
+                src="/public/assets/encrypt.png"
                 alt="Encrypt Files"
                 className="mx-auto mb-4 w-16 h-16"
               />
@@ -67,7 +67,7 @@ export default function Home() {
               onClick={() => route("/decrypt")}
             >
               <img
-                src="/src/assets/decrypt.png"
+                src="/public/assets/decrypt.png"
                 alt="Decrypt Files"
                 className="mx-auto mb-4 w-16 h-16"
               />
@@ -84,7 +84,7 @@ export default function Home() {
               onClick={() => route("/share-securely")}
             >
               <img
-                src="/src/assets/securechat.png"
+                src="/public/assets/securechat.png"
                 alt="Share Securely"
                 className="mx-auto mb-4 w-16 h-16"
               />
