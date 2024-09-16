@@ -5,14 +5,14 @@ import {
     decryptText,
     decryptFile,
 } from "./encryption"
-import sendSound from "../assets/whisper.mp3"
+
 import { Buffer } from "buffer"
 
 let encryptFileCounter = 1
 let globalMessageCount = 0
 
 export const playSendSound = () => {
-    const audio = new Audio(sendSound)
+    const audio = new Audio("./public/assets/whisper.mp3")
     audio.play()
 }
 
