@@ -14,19 +14,19 @@ export default function FeaturesOverview() {
                     <FeatureCard
                         title="Encrypt Files"
                         description="Keep your files on your device secure and protected from unauthorized access"
-                        imgSrc="/public/assets/encrypt.png"
+                        imgSrc="/assets/encrypt.png"
                         routePath="/encrypt"
                     />
                     <FeatureCard
                         title="Decrypt Files"
                         description="Only you can access your confidential files"
-                        imgSrc="/public/assets/decrypt.png"
+                        imgSrc="/assets/decrypt.png"
                         routePath="/decrypt"
                     />
                     <FeatureCard
                         title="Secure Chat"
                         description="Chat and send files securely"
-                        imgSrc="/public/assets/securechat.png"
+                        imgSrc="/assets/securechat.png"
                         routePath="/shareSecurely"
                     />
                 </div>

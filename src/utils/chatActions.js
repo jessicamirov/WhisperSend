@@ -12,7 +12,7 @@ let encryptFileCounter = 1
 let globalMessageCount = 0
 
 export const playSendSound = () => {
-    const audio = new Audio("./public/assets/whisper.mp3")
+    const audio = new Audio("./assets/whisper.mp3")
     audio.play()
 }
 
