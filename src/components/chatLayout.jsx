@@ -4,12 +4,11 @@ import ConfirmModal from "../utils/confirmModal"
 import { route } from "preact-router";
 
 export default function ChatLayout({
-    peerId,
     connectPeerId,
     children,
     instructions,
 }) {
-    const { disconnect, showExitButton, handleExit, isDisconnected } =
+    const { disconnect, showExitButton, handleExit, isDisconnected, peerId } =
         useContext(PeerIdContext)
     const [showPeerModal, setShowPeerModal] = useState(false)
     const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768)
@@ -86,7 +85,7 @@ export default function ChatLayout({
                         className="text-xs bg-green-500 text-white px-3 py-1 rounded-lg shadow-lg hover:bg-green-600 transition duration-300"
                         onClick={() => setShowPeerModal(true)}
                     >
-                        Show Peer Info
+                        Show Peers Info
                     </button>
                 </div>
             )}
@@ -94,7 +93,11 @@ export default function ChatLayout({
             {showPeerModal && (
                 <ConfirmModal
                     title="Peer Information"
-                    message={`Your Peer ID: ${peerId || "N/A"}\nPeer ID you're chatting with: ${connectPeerId}`}
+                    message={ <span>
+        <strong>Your Peer ID:</strong> {peerId}
+        <br />
+        <strong>Peer ID you're chatting with:</strong> {connectPeerId}
+    </span>}
                     onConfirm={() => setShowPeerModal(false)}
                     onCancel={() => setShowPeerModal(false)}
                 />

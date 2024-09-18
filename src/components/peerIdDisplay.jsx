@@ -1,12 +1,12 @@
-import { useState, useContext, useEffect, useRef } from "preact/hooks"
+import { useState, useContext, useEffect, useRef } from "preact/hooks";
 import {
     FaSyncAlt,
     FaShareAlt,
     FaEye,
     FaEyeSlash,
     FaCopy,
-} from "react-icons/fa"
-import { PeerIdContext } from "../components/peerIdContext"
+} from "react-icons/fa";
+import { PeerIdContext } from "../components/peerIdContext";
 
 export default function PeerIdDisplay({
     handleInvite,
@@ -14,50 +14,61 @@ export default function PeerIdDisplay({
     customStyle,
     showIcons,
 }) {
-    const { peerId, recalculatePeerId } = useContext(PeerIdContext)
-    const [isExpanded, setIsExpanded] = useState(false)
-    const [isSmallScreen, setIsSmallScreen] = useState(false)
-    const textRef = useRef(null)
+    const { peerId, recalculatePeerId } = useContext(PeerIdContext);
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [isSmallScreen, setIsSmallScreen] = useState(false);
+    const textRef = useRef(null);
 
     const toggleExpand = () => {
-        setIsExpanded(!isExpanded)
-    }
+        setIsExpanded(!isExpanded);
+    };
 
     useEffect(() => {
         const handleResize = () => {
-            setIsSmallScreen(window.innerWidth < 768) 
+            setIsSmallScreen(window.innerWidth < 768);
             if (window.innerWidth >= 768) {
-                setIsExpanded(true) 
+                setIsExpanded(true);
             } else {
-                setIsExpanded(false) 
+                setIsExpanded(false);
             }
-        }
+        };
 
-        window.addEventListener("resize", handleResize)
-        handleResize()
+        window.addEventListener("resize", handleResize);
+        handleResize();
 
         return () => {
-            window.removeEventListener("resize", handleResize)
-        }
-    }, [])
+            window.removeEventListener("resize", handleResize);
+        };
+    }, []);
 
     const handleMouseDown = (e) => {
-        const textElement = textRef.current
-        textElement.dataset.isDragging = "true"
-        textElement.dataset.startX = e.pageX - textElement.scrollLeft
-    }
+        const textElement = textRef.current;
+        textElement.dataset.isDragging = "true";
+        textElement.dataset.startX = e.pageX - textElement.scrollLeft;
+    };
 
     const handleMouseMove = (e) => {
-        const textElement = textRef.current
+        const textElement = textRef.current;
         if (textElement.dataset.isDragging === "true") {
-            textElement.scrollLeft = e.pageX - textElement.dataset.startX
+            textElement.scrollLeft = e.pageX - textElement.dataset.startX;
         }
-    }
+    };
 
     const handleMouseUp = () => {
-        const textElement = textRef.current
-        textElement.dataset.isDragging = "false"
-    }
+        const textElement = textRef.current;
+        textElement.dataset.isDragging = "false";
+    };
+
+    // Add the function to copy the peerId to clipboard when clicked
+    const handleCopyPeerIdClick = () => {
+        navigator.clipboard.writeText(peerId)
+            .then(() => {
+                alert("Peer ID copied to clipboard!");
+            })
+            .catch((err) => {
+                console.error("Failed to copy Peer ID: ", err);
+            });
+    };
 
     return (
         <div className={`flex flex-col items-center mb-4 ${customStyle}`}>
@@ -66,15 +77,15 @@ export default function PeerIdDisplay({
                     My Peer ID
                 </p>
             </div>
-
             <div className="flex items-center justify-between bg-gray-700 text-white px-2 py-1 rounded-lg w-full max-w-full">
                 {(isExpanded || !isSmallScreen) && (
                     <div
                         ref={textRef}
-                        className="flex-1 overflow-hidden whitespace-nowrap mr-2 cursor-grab"
+                        className="flex-1 overflow-hidden whitespace-nowrap mr-2 cursor-pointer" // cursor-pointer to indicate it's clickable
                         onMouseDown={handleMouseDown}
                         onMouseMove={handleMouseMove}
                         onMouseUp={handleMouseUp}
+                        onClick={handleCopyPeerIdClick} // Add onClick to copy Peer ID
                     >
                         <span className="text-xs font-bold">{peerId}</span>
                     </div>
@@ -150,5 +161,5 @@ export default function PeerIdDisplay({
                 )}
             </div>
         </div>
-    )
+    );
 }

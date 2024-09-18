@@ -1,16 +1,43 @@
-import { useState } from "preact/hooks"
+import { useState } from "preact/hooks";
 
 export default function MnemonicPopup({ mnemonic, onConfirm }) {
-    const [isMnemonicConfirmed, setIsMnemonicConfirmed] = useState(false)
+    const [isMnemonicConfirmed, setIsMnemonicConfirmed] = useState(false);
 
+    // פונקציה להורדת המנמוניק כקובץ
     const handleDownloadMnemonic = () => {
-        const blob = new Blob([mnemonic], { type: "text/plain" })
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement("a")
-        link.href = url
-        link.download = "mnemonic.txt"
-        link.click()
-    }
+        const blob = new Blob([mnemonic], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "mnemonic.txt";
+        link.click();
+    };
+
+    // פונקציה להעתקת המנמוניק ללוח
+    const handleCopyMnemonic = () => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(mnemonic)
+                .then(() => {
+                    alert("Mnemonic copied to clipboard!");
+                })
+                .catch((err) => {
+                    console.error("Failed to copy mnemonic: ", err);
+                });
+        } else {
+            // fallback לשימוש במקרה שאין תמיכה ב-navigator.clipboard
+            const textarea = document.createElement("textarea");
+            textarea.value = mnemonic;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand("copy");
+                alert("Mnemonic copied to clipboard!");
+            } catch (err) {
+                console.error("Fallback: Failed to copy mnemonic", err);
+            }
+            document.body.removeChild(textarea);
+        }
+    };
 
     return (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
@@ -20,7 +47,13 @@ export default function MnemonicPopup({ mnemonic, onConfirm }) {
                     Please save the following mnemonic phrase. You will need it
                     to decrypt your files.
                 </p>
-                <div className="bg-gray-200 p-4 rounded mb-4">{mnemonic}</div>
+                {/* הוספת אפשרות להעתיק את הטקסט בלחיצה */}
+                <div
+                    className="bg-gray-200 p-4 rounded mb-4 cursor-pointer"
+                    onClick={handleCopyMnemonic} // נוסיף את הפונקציה כאן להעתיק בלחיצה על הטקסט
+                >
+                    {mnemonic}
+                </div>
                 <div className="mb-4">
                     <button
                         onClick={handleDownloadMnemonic}
@@ -44,18 +77,19 @@ export default function MnemonicPopup({ mnemonic, onConfirm }) {
                     </label>
                 </div>
                 <button
-                    onClick={() =>
-                        isMnemonicConfirmed
-                            ? onConfirm()
-                            : alert(
-                                  "Please confirm that you saved the mnemonic.",
-                              )
-                    }
+                    onClick={() => {
+                        if (isMnemonicConfirmed) {
+                            handleCopyMnemonic(); // הוספת העתקה בעת לחיצה על Confirm
+                            onConfirm();
+                        } else {
+                            alert("Please confirm that you saved the mnemonic.");
+                        }
+                    }}
                     className="mt-4 bg-green-500 text-white px-4 py-2 rounded"
                 >
                     Confirm
                 </button>
             </div>
         </div>
-    )
+    );
 }

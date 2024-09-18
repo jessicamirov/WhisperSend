@@ -5,14 +5,15 @@ import {
     decryptText,
     decryptFile,
 } from "./encryption"
-
 import { Buffer } from "buffer"
 
 let encryptFileCounter = 1
 let globalMessageCount = 0
 
+const sendSound = "/assets/whisper.mp3"
+
 export const playSendSound = () => {
-    const audio = new Audio("./assets/whisper.mp3")
+    const audio = new Audio(sendSound)
     audio.play()
 }
 
@@ -40,7 +41,6 @@ export const handleSendMessage = ({
             myWallet.privateKey,
         )
 
-        // בדיקה אם ההצפנה נכשלה
         if (!encrypted || !nonce) {
             console.error("Encryption failed, cannot send message.")
             return
@@ -88,7 +88,6 @@ export const handleSendFile = async ({
             let fileName
 
             if (confirmEncrypt) {
-                // קובץ מוצפן, שמירת סוג הקובץ כחלק מה- nonce
                 const encryptedFileData = encryptFile(
                     fileBuffer,
                     recipientPeerId,
@@ -97,16 +96,14 @@ export const handleSendFile = async ({
                 encMessage = JSON.stringify({
                     nonce: encryptedFileData.nonce,
                     encrypted: encryptedFileData.encrypted,
-                    fileType: selectedFile.type, // שמירת סוג הקובץ
+                    fileType: selectedFile.type,
                 })
-                fileName = `encrypted${encryptFileCounter++}.txt` // הקובץ המוצפן תמיד יהיה .txt
+                fileName = `encrypted${encryptFileCounter++}.txt`
             } else {
-                // קובץ לא מוצפן שומר על הסיומת המקורית
                 encMessage = fileBuffer.toString("hex")
-                fileName = selectedFile.name // שימוש בשם והסיומת המקוריים
+                fileName = selectedFile.name
             }
 
-            // שליחת הקובץ
             connection.send(
                 JSON.stringify({
                     messageType: "file",
@@ -115,19 +112,14 @@ export const handleSendFile = async ({
                 }),
             )
 
-            // יצירת URL עבור הקובץ שנשלח לשולח עצמו (הקובץ המקורי אם הוא לא מוצפן)
             const fileURL = URL.createObjectURL(
                 new Blob([confirmEncrypt ? encMessage : event.target.result], {
                     type: selectedFile.type,
                 }),
             )
 
-            // הצגת שם הקובץ בצ'אט
-            const displayName = confirmEncrypt
-                ? fileName // קובץ מוצפן תמיד יקבל שם בפורמט encryptedX.txt
-                : fileName // קובץ לא מוצפן שומר על שמו המקורי
+            const displayName = confirmEncrypt ? fileName : fileName
 
-            // עדכון הודעות עם הקובץ שנשלח
             setMessages([
                 ...messages,
                 {
@@ -141,7 +133,6 @@ export const handleSendFile = async ({
         }
         reader.readAsArrayBuffer(selectedFile)
 
-        // איפוס בחירת הקובץ לאחר השליחה
         e.target.value = null
     }
 }
@@ -175,29 +166,26 @@ export const handleReceiveFile = async (
     let fileName = data.fileName
     let encrypted = false
 
-    globalMessageCount++ // העלאת המספר הסידורי עבור כל הודעה חדשה
+    globalMessageCount++
 
     if (!fileName) {
         console.error("Received file without a valid name.")
         return
     }
 
-    // בדיקה אם הקובץ נשלח כקובץ מוצפן או לא מוצפן
     if (
         typeof data.data === "string" &&
         data.data.length % 2 === 0 &&
         /^[0-9a-f]+$/i.test(data.data)
     ) {
-        // קובץ לא מוצפן, שמירה כקובץ כפי שהוא
         const fileBuffer = Buffer.from(data.data, "hex")
         const blob = new Blob([fileBuffer], {
             type: "application/octet-stream",
         })
         fileURL = URL.createObjectURL(blob)
-        fileName = `${fileName}` // שימוש במספר סידורי ייחודי
+        fileName = `${fileName}`
         toast.success("Unencrypted file received!")
     } else {
-        // קובץ מוצפן עם nonce
         const parsedData = JSON.parse(data.data)
         const { nonce, encrypted: encryptedData, fileType } = parsedData
 
@@ -216,10 +204,16 @@ export const handleReceiveFile = async (
         )
 
         if (!shouldDecrypt) {
+            const savePeerId = await openConfirmModal(
+            "Save the sender peer id",
+            `For future decryption: ${senderPublicKey}`,
+        )
+
             const jsonContent = JSON.stringify(
                 {
                     nonce,
                     encrypted: encryptedData,
+                    fileType,
                 },
                 null,
                 2,
@@ -228,7 +222,7 @@ export const handleReceiveFile = async (
                 type: "application/json",
             })
             fileURL = URL.createObjectURL(blob)
-            fileName = `encrypted${globalMessageCount}.txt` // שימוש במספר סידורי ייחודי עבור קובץ מוצפן
+            fileName = `encrypted${globalMessageCount}.txt`
             toast.success("Encrypted file saved as JSON with nonce.")
         } else {
             const decryptedBlob = decryptFile(
@@ -238,7 +232,7 @@ export const handleReceiveFile = async (
             )
             if (decryptedBlob) {
                 fileURL = URL.createObjectURL(decryptedBlob)
-                fileName = `decrypted${globalMessageCount}.${fileType.split("/").pop()}` // שימוש בסיומת מתוך fileType ושם ייחודי
+                fileName = `decrypted${globalMessageCount}.${fileType.split("/").pop()}`
                 toast.success("File decrypted!")
             } else {
                 console.error("File decryption failed.")

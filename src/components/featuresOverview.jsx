@@ -4,7 +4,7 @@ export default function FeaturesOverview() {
     return (
         <section
             id="features-overview"
-            className="py-20 bg-gray-100 dark:bg-gray-800"
+            className="pt-10 pb-20 bg-gray-100 dark:bg-gray-800"
         >
             <div className="max-w-6xl mx-auto text-center">
                 <h2 className="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-8">

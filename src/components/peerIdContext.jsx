@@ -63,6 +63,7 @@ export const PeerIdProvider = ({ children }) => {
         const { publicKey } = newWallet
         setMyWallet(newWallet)
         setPeerId(publicKey)
+        console.log("PEERID CON: private", newWallet.privateKey)
     }, [])
 
     useEffect(() => {
@@ -105,6 +106,7 @@ export const PeerIdProvider = ({ children }) => {
                     con.send(JSON.stringify({ type: "connection-accepted" }))
                     setConnection(con)
                     setRecipient(con.peer)
+                    setIsDisconnected(false)
                     route(`/chat/${con.peer}`)
 
                     con.on("data", (data) => handleData(data, con.peer))
@@ -151,10 +153,10 @@ export const PeerIdProvider = ({ children }) => {
                             performDisconnect()
                             return
                         }
-
                         setConnection(con)
                         setRecipientPeerId(recId)
                         toast.dismiss()
+                        setIsDisconnected(false)
                         route(`/chat/${recId}`)
                         resolve()
                     } else if (parsedData.type === "connection-rejected") {
@@ -167,12 +169,8 @@ export const PeerIdProvider = ({ children }) => {
                             draggable: true,
                             progress: undefined,
                         })
-                        console.log("168")
-
                         reject(new Error("Connection rejected by peer"))
                     } else if (parsedData.type === "disconnect-notify") {
-                        console.log("173")
-
                         handleRemoteDisconnect(false, parsedData.peerId)
                     } else {
                         handleData(data, recId)
@@ -181,7 +179,6 @@ export const PeerIdProvider = ({ children }) => {
 
                 con.on("close", () => {
                     if (!localInitiatedDisconnect && !localRejected) {
-                        console.log("183")
                         handleRemoteDisconnect(false, recId)
                     }
                 })

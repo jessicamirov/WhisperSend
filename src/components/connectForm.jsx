@@ -2,21 +2,21 @@ import { useState, useContext } from "preact/hooks"
 import { PeerIdContext } from "../components/peerIdContext"
 
 export default function ConnectForm() {
-    const { connectToPeer, connection,peer } = useContext(PeerIdContext);   
-  const [connectPeerId, setConnectPeerId] = useState("")
+    const { connectToPeer, connection, peer, peerId } = useContext(PeerIdContext);   
+    const [connectPeerId, setConnectPeerId] = useState("")
     const [errorMessage, setErrorMessage] = useState("")
     const [isConnecting, setIsConnecting] = useState(false) 
     const [connectionTimeout, setConnectionTimeout] = useState(null) 
-
-
-    
 
     const handleConnect = () => {
         if (!connectPeerId) {
             setErrorMessage("Error: Please enter a peer ID.")
             return
         }
-
+        if (connectPeerId === peerId) {
+            setErrorMessage("Error: You cannot connect to your own Peer ID.");
+            return;
+        }
         setIsConnecting(true)
         setErrorMessage("")
 
@@ -59,7 +59,6 @@ export default function ConnectForm() {
         }
         
     }
-    
 
     return (
         <div className="mb-6">
