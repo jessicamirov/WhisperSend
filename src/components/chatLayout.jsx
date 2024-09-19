@@ -1,13 +1,9 @@
 import { useContext, useState, useEffect } from "preact/hooks"
 import { PeerIdContext } from "./peerIdContext"
-import ConfirmModal from "../utils/confirmModal" 
-import { route } from "preact-router";
+import ConfirmModal from "../utils/confirmModal"
+import { route } from "preact-router"
 
-export default function ChatLayout({
-    connectPeerId,
-    children,
-    instructions,
-}) {
+export default function ChatLayout({ connectPeerId, children, instructions }) {
     const { disconnect, showExitButton, handleExit, isDisconnected, peerId } =
         useContext(PeerIdContext)
     const [showPeerModal, setShowPeerModal] = useState(false)
@@ -36,7 +32,7 @@ export default function ChatLayout({
     return (
         <div className="min-h-screen w-full flex flex-col items-center p-4 bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-gray-800 dark:to-gray-900">
             {!isSmallScreen && (
-                <div className="flex items-center justify-between w-full bg-white dark:bg-gray-800 p-4 rounded-xl shadow-2xl mb-4">
+                <div className="flex items-center justify-between w-full bg-white dark:bg-gray-800 p-1 rounded-xl shadow-2xl mb-4">
                     <div className="flex items-center space-x-2 truncate">
                         <p className="text-xs font-bold text-gray-800 dark:text-gray-200">
                             Peer ID you're chatting with:
@@ -93,18 +89,21 @@ export default function ChatLayout({
             {showPeerModal && (
                 <ConfirmModal
                     title="Peer Information"
-                    message={ <span>
-        <strong>Your Peer ID:</strong> {peerId}
-        <br />
-        <strong>Peer ID you're chatting with:</strong> {connectPeerId}
-    </span>}
+                    message={
+                        <span>
+                            <strong>Your Peer ID:</strong> {peerId}
+                            <br />
+                            <strong>Peer ID you're chatting with:</strong>{" "}
+                            {connectPeerId}
+                        </span>
+                    }
                     onConfirm={() => setShowPeerModal(false)}
                     onCancel={() => setShowPeerModal(false)}
                 />
             )}
 
             <div className="w-full flex-grow mb-4">
-                <div className="w-full flex flex-col bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl overflow-hidden">
+                <div className="w-full flex flex-col bg-white dark:bg-gray-800 p-1 rounded-xl shadow-2xl overflow-hidden">
                     {children}
                 </div>
             </div>

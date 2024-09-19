@@ -31,12 +31,12 @@ const steps = [
     },
 ]
 
-export default function ChatInstruction() {
+export default function ChatInstruction({ title, steps }) {
     return (
         <div className="w-1/4 pr-4">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-2xl h-full">
                 <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
-                    How Secure Chat Works
+                    {title}
                 </h3>
                 <div className="space-y-4">
                     {steps.map(({ step, color, title, description }) => (
@@ -61,3 +61,4 @@ export default function ChatInstruction() {
         </div>
     )
 }
+

@@ -16,8 +16,8 @@ export default function ChatMessages() {
     return (
         <div
             className="bg-gray-100 dark:bg-gray-700 rounded-xl p-4 overflow-y-auto mb-4"
-            style={{ height: "70vh", width: "100%" }} 
-        >
+            style={{ height: "70vh", width: "100%" }}
+        > 
             {messages.map((msg, index) => (
                 <div
                     key={index}

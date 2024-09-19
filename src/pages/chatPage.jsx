@@ -4,7 +4,7 @@ import ChatMessages from "../components/chatMessages"
 import MessageInput from "../components/messageInput"
 import InstructionsLayout from "../components/instructionsLayout"
 import ToggleInstructionsButton from "../components/toggleInstructionsButton"
-
+import { FaLock } from "react-icons/fa"
 
 const chatInstructions = [
     {
@@ -57,6 +57,12 @@ export default function ChatPage({ connectPeerId }) {
     return (
         <ChatLayout connectPeerId={connectPeerId} instructions={null}>
             <div className="w-full mb-4">
+                <div className="flex items-start justify-center mt-0 p-0">
+                    <p className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center">
+                        Your personal messages are encrypted end-to-end
+                        <FaLock className="ml-1 w-3 h-3" />
+                    </p>
+                </div>
                 <ChatMessages />
                 <MessageInput />
             </div>
