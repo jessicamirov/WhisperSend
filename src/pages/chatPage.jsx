@@ -3,41 +3,9 @@ import ChatLayout from "../components/chatLayout"
 import ChatMessages from "../components/chatMessages"
 import MessageInput from "../components/messageInput"
 import InstructionsLayout from "../components/instructionsLayout"
+import { chatInstructions } from "../components/instructions"
 import ToggleInstructionsButton from "../components/toggleInstructionsButton"
 import { FaLock } from "react-icons/fa"
-
-const chatInstructions = [
-    {
-        step: 1,
-        color: "blue",
-        title: "Connect",
-        description: "Enter peer ID and click 'Connect'.",
-    },
-    {
-        step: 2,
-        color: "green",
-        title: "Message",
-        description: "Type and send your message.",
-    },
-    {
-        step: 3,
-        color: "yellow",
-        title: "Send File",
-        description: "Click paperclip to select a file.",
-    },
-    {
-        step: 4,
-        color: "red",
-        title: "Encrypt",
-        description: "Click 'Encrypt & Send' to send file.",
-    },
-    {
-        step: 5,
-        color: "purple",
-        title: "Decrypt",
-        description: "Click 'Decrypt' to view received file.",
-    },
-]
 
 export default function ChatPage({ connectPeerId }) {
     const [showInstructions, setShowInstructions] = useState(false)

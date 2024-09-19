@@ -3,6 +3,7 @@ import { Buffer } from "buffer";
 import { encryptFile } from "../utils/encryption";
 import { PeerIdContext } from "../components/peerIdContext";
 import InstructionsLayout from "../components/instructionsLayout";
+import { encryptionInstructions } from "../components/instructions"
 import ToggleInstructionsButton from "../components/toggleInstructionsButton";
 
 export default function Encrypt() {
@@ -92,7 +93,7 @@ export default function Encrypt() {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-gray-800 dark:to-gray-900 relative">
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-5xl mx-auto mb-8">
-                <h2 className="text-4xl font-extrabold text-gray-800 dark:text-gray-200 mb-6">
+                <h2 className="text-4xl font-extrabold text-gray-800 dark:text-gray-200 mb-6 text-center">
                     Self-Encryption
                 </h2>
                 <div className="mb-6">
@@ -128,41 +129,19 @@ export default function Encrypt() {
                 <div className="w-full max-w-5xl mx-auto">
                     <InstructionsLayout
                         title="How Encryption Works"
-                        steps={[
-                            {
-                                step: 1,
-                                color: "blue",
-                                title: "Select a file",
-                                description: "Choose a file to encrypt.",
-                            },
-                            {
-                                step: 2,
-                                color: "green",
-                                title: "Encrypt",
-                                description: 'Click "Encrypt & Save" to encrypt the file.',
-                            },
-                            {
-                                step: 3,
-                                color: "yellow",
-                                title: "Save file and keys",
-                                description: "Download the encrypted file and the keys.",
-                            },
-                            {
-                                step: 4,
-                                color: "red",
-                                title: "Store securely",
-                                description: "Store the encryption keys securely.",
-                            },
-                        ]}
+                        steps={encryptionInstructions}
                     />
                 </div>
             )}
             {showMnemonicPopup && (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">
-                        <h2 className="text-2xl font-bold mb-4">Mnemonic Words</h2>
+                        <h2 className="text-2xl font-bold mb-4">
+                            Mnemonic Words
+                        </h2>
                         <p className="mb-4">
-                            Please save the following mnemonic phrase. You will need it to decrypt your files.
+                            Please save the following mnemonic phrase. You will
+                            need it to decrypt your files.
                         </p>
                         <div className="bg-gray-200 p-4 rounded mb-4">
                             {myWallet.mnemonic.phrase}
@@ -181,7 +160,9 @@ export default function Encrypt() {
                                 id="confirm"
                                 className="mr-2"
                                 checked={isMnemonicConfirmed}
-                                onChange={() => setIsMnemonicConfirmed(!isMnemonicConfirmed)}
+                                onChange={() =>
+                                    setIsMnemonicConfirmed(!isMnemonicConfirmed)
+                                }
                             />
                             <label htmlFor="confirm" className="text-gray-700">
                                 I have written down the mnemonic phrase
@@ -197,5 +178,5 @@ export default function Encrypt() {
                 </div>
             )}
         </div>
-    );
+    )
 }

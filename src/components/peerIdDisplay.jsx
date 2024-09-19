@@ -73,7 +73,7 @@ export default function PeerIdDisplay({
     return (
         <div className={`flex flex-col items-center mb-4 ${customStyle}`}>
             <div className="flex items-center space-x-2 mb-4">
-                <p className="text-xs font-bold text-gray-800 dark:text-gray-200">
+                <p className="text-base font-bold text-gray-800 dark:text-gray-200">
                     My Peer ID
                 </p>
             </div>
@@ -87,7 +87,7 @@ export default function PeerIdDisplay({
                         onMouseUp={handleMouseUp}
                         onClick={handleCopyPeerIdClick} // Add onClick to copy Peer ID
                     >
-                        <span className="text-xs font-bold">{peerId}</span>
+                        <span className="text-sm font-bold">{peerId}</span>
                     </div>
                 )}
 

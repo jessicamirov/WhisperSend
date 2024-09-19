@@ -5,35 +5,8 @@ import { Buffer } from "buffer"
 import { PeerIdContext } from "../components/peerIdContext"
 import nacl from "tweetnacl"
 import InstructionsLayout from "../components/instructionsLayout"
+import { decryptionInstructions } from "../components/instructions"
 import ToggleInstructionsButton from "../components/toggleInstructionsButton"
-
-const decryptionSteps = [
-    {
-        step: 1,
-        color: "blue",
-        title: "Upload an encrypted file",
-        description: "Choose an encrypted file to decrypt.",
-    },
-    {
-        step: 2,
-        color: "green",
-        title: "Enter encryption key",
-        description: "Enter the encryption key or use your mnemonic.",
-    },
-    {
-        step: 3,
-        color: "yellow",
-        title: "Decrypt",
-        description: 'Click the "Decrypt" button to decrypt the file.',
-    },
-    {
-        step: 4,
-        color: "red",
-        title: "Download decrypted file",
-        description:
-            "Download the decrypted file once the process is complete.",
-    },
-]
 
 export default function Decrypt() {
     const { myWallet } = useContext(PeerIdContext)
@@ -255,7 +228,7 @@ export default function Decrypt() {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-gray-800 dark:to-gray-900 relative">
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-5xl mx-auto mb-8">
-                <h2 className="text-4xl font-extrabold text-gray-800 dark:text-gray-200 mb-6">
+                <h2 className="text-4xl font-extrabold text-gray-800 dark:text-gray-200 mb-6 text-center">
                     Self-Decryption
                 </h2>
                 <div className="mb-6">
@@ -334,7 +307,7 @@ export default function Decrypt() {
                 <div className="w-full max-w-5xl mx-auto">
                     <InstructionsLayout
                         title="How Decryption Works"
-                        steps={decryptionSteps}
+                        steps={decryptionInstructions}
                     />
                 </div>
             )}
