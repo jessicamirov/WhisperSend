@@ -7,9 +7,8 @@ import {
 } from "./encryption"
 import { Buffer } from "buffer"
 
-let encryptFileCounter = 1// Counter to track encrypted files sent.
-let globalMessageCount = 0// Counter for total messages sent.
-
+let encryptFileCounter = 1 // Counter to track encrypted files sent.
+let globalMessageCount = 0 // Counter for total messages sent.
 
 /**
  * Plays a sound to indicate that a message or file has been sent successfully.
@@ -20,7 +19,6 @@ export const playSendSound = () => {
     const audio = new Audio(sendSound)
     audio.play()
 }
-
 
 /**
  * Handles sending an encrypted text message through the peer-to-peer connection.
@@ -45,7 +43,7 @@ export const handleSendMessage = ({
     }
 
     if (connection && connection.open) {
-                // Encrypt the message using the recipient's peer ID and the sender's private key.
+        // Encrypt the message using the recipient's peer ID and the sender's private key.
         const { encrypted, nonce } = encryptText(
             message,
             recipientPeerId,
@@ -66,7 +64,7 @@ export const handleSendMessage = ({
         // Send the encrypted message.
 
         connection.send(encMessage)
-                // Update the message list with the new message.
+        // Update the message list with the new message.
 
         setMessages([
             ...messages,
@@ -97,7 +95,7 @@ export const handleSendFile = async ({
     openConfirmModal,
 }) => {
     const selectedFile = e.target.files[0]
-     // Ask the user if they want to encrypt the file before sending.
+    // Ask the user if they want to encrypt the file before sending.
     if (selectedFile) {
         const confirmEncrypt = await openConfirmModal(
             "Encrypt File",
@@ -109,7 +107,7 @@ export const handleSendFile = async ({
             const fileBuffer = Buffer.from(event.target.result)
             let encMessage
             let fileName
-             // Encrypt the file data.
+            // Encrypt the file data.
 
             if (confirmEncrypt) {
                 const encryptedFileData = encryptFile(
@@ -124,7 +122,7 @@ export const handleSendFile = async ({
                 })
                 fileName = `encrypted${encryptFileCounter++}.json`
             } else {
-               // Send the file without encryption as a hex string.
+                // Send the file without encryption as a hex string.
                 encMessage = fileBuffer.toString("hex")
                 fileName = selectedFile.name
             }
@@ -195,15 +193,15 @@ export const handleReceiveFile = async (
     data,
     openConfirmModal,
 ) => {
-    let fileURL;
-    let fileName = data.fileName;
-    let encrypted = false;
+    let fileURL
+    let fileName = data.fileName
+    let encrypted = false
 
-    globalMessageCount++;
+    globalMessageCount++
 
     if (!fileName) {
-        console.error("Received file without a valid name.");
-        return;
+        console.error("Received file without a valid name.")
+        return
     }
     // Check if the file is encrypted or not.
     if (
@@ -212,78 +210,81 @@ export const handleReceiveFile = async (
         /^[0-9a-f]+$/i.test(data.data)
     ) {
         // If the file is not encrypted, convert it from hex to binary and display it.
-        const fileBuffer = Buffer.from(data.data, "hex");
+        const fileBuffer = Buffer.from(data.data, "hex")
         const blob = new Blob([fileBuffer], {
             type: "application/octet-stream",
-        });
-        fileURL = URL.createObjectURL(blob);
-        fileName = `${fileName}`;
-        toast.success("Unencrypted file received!");
+        })
+        fileURL = URL.createObjectURL(blob)
+        fileName = `${fileName}`
+        toast.success("Unencrypted file received!")
     } else {
-      // If the file is encrypted, handle the decryption process.
-        const parsedData = JSON.parse(data.data);
-        const { nonce, encrypted: encryptedData, fileType } = parsedData;
+        // If the file is encrypted, handle the decryption process.
+        const parsedData = JSON.parse(data.data)
+        const { nonce, encrypted: encryptedData, fileType } = parsedData
 
-        const fileBuffer = Buffer.from(encryptedData, "hex");
-        const fileTypeFinal = fileType || "application/octet-stream"; 
+        const fileBuffer = Buffer.from(encryptedData, "hex")
+        const fileTypeFinal = fileType || "application/octet-stream"
         fileURL = URL.createObjectURL(
             new Blob([fileBuffer], {
                 type: fileTypeFinal,
-            })
-        );
-        encrypted = true;
-        toast.success("Encrypted file received!");
+            }),
+        )
+        encrypted = true
+        toast.success("Encrypted file received!")
         // Ask the user if they want to decrypt the file.
         const shouldDecrypt = await openConfirmModal(
             "Decrypt File",
-            "Do you want to decrypt the received file?"
-        );
+            "Do you want to decrypt the received file?",
+        )
 
         if (!shouldDecrypt) {
-       // Save the encrypted file as a JSON containing the encryption details.
+            const savePeerId = await openConfirmModal(
+                "Save your partner's peer ID for future decryption",
+                "Peer Id: "+`${senderPublicKey}`,
+            )
+            // Save the encrypted file as a JSON containing the encryption details.
             const jsonContent = JSON.stringify(
                 {
                     nonce,
                     encrypted: encryptedData,
-                    fileType: fileTypeFinal, 
+                    fileType: fileTypeFinal,
                 },
                 null,
-                2
-            );
+                2,
+            )
 
             const blob = new Blob([jsonContent], {
                 type: "application/json",
-            });
+            })
 
-            fileURL = URL.createObjectURL(blob);
-            fileName = `encrypted${globalMessageCount}.json`; 
-            toast.success("Encrypted file saved as JSON with fileType.");
+            fileURL = URL.createObjectURL(blob)
+            fileName = `encrypted${globalMessageCount}.json`
+            toast.success("Encrypted file saved as JSON with fileType.")
         } else {
-      // Decrypt the file and save it with a decrypted file name.
+            // Decrypt the file and save it with a decrypted file name.
             const decryptedBlob = decryptFile(
                 JSON.stringify(parsedData),
                 senderPublicKey,
-                privateKey
-            );
+                privateKey,
+            )
 
             if (decryptedBlob) {
-
                 const blob = new Blob([decryptedBlob], {
-                    type: fileTypeFinal || "application/octet-stream", 
-                });
+                    type: fileTypeFinal || "application/octet-stream",
+                })
 
-                fileName = `decrypted${globalMessageCount}`;
+                fileName = `decrypted${globalMessageCount}`
 
-                 // Create a download link for the decrypted file.
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = `decrypted${globalMessageCount}`;
-                link.click();
+                // Create a download link for the decrypted file.
+                const link = document.createElement("a")
+                link.href = URL.createObjectURL(blob)
+                link.download = `decrypted${globalMessageCount}`
+                link.click()
 
-                toast.success("File decrypted and saved!");
+                toast.success("File decrypted and saved!")
             } else {
-                console.error("File decryption failed.");
-                return;
+                console.error("File decryption failed.")
+                return
             }
         }
     }
@@ -298,6 +299,5 @@ export const handleReceiveFile = async (
             url: fileURL,
             encrypted,
         },
-    ]);
-};
-
+    ])
+}

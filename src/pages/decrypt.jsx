@@ -9,7 +9,6 @@ import { decryptionInstructions } from "../components/instructions"
 import ToggleInstructionsButton from "../components/toggleInstructionsButton"
 import MnemonicPopup from "../utils/mnemonicPopup"
 
-
 /**
  * Decrypt component is used to decrypt files:
  * Either encrypted by the user on the Encrypt page.
@@ -33,7 +32,7 @@ export default function Decrypt({ showMnemonicPopup, onConfirmMnemonic }) {
         setMessage("")
         setIsDecrypted(false)
     }
-      /**
+    /**
      * Decrypts a file using a shared secret from the sender's public key and recipient's private key.
      */
     const decryptFilefromEncrypt = (
@@ -74,7 +73,7 @@ export default function Decrypt({ showMnemonicPopup, onConfirmMnemonic }) {
         }
     }
 
-     /**
+    /**
      * Handles decryption of files encrypted by the user on the Encrypt page.
      */
     const handleNonChatDecrypt = async () => {
@@ -93,8 +92,7 @@ export default function Decrypt({ showMnemonicPopup, onConfirmMnemonic }) {
                     Buffer.from(reader.result).toString(),
                 )
 
-              
-                const { fileType } = encryptedJson 
+                const { fileType } = encryptedJson
                 const decryptedBuffer = decryptFilefromEncrypt(
                     JSON.stringify(encryptedJson),
                     wallet.publicKey,
@@ -110,7 +108,7 @@ export default function Decrypt({ showMnemonicPopup, onConfirmMnemonic }) {
                     type: fileType || "application/octet-stream",
                 })
 
-                const originalFileName = file.name.replace(".json", "") 
+                const originalFileName = file.name.replace(".json", "")
                 const link = document.createElement("a")
                 link.href = URL.createObjectURL(blob)
                 link.download = originalFileName
@@ -168,7 +166,6 @@ export default function Decrypt({ showMnemonicPopup, onConfirmMnemonic }) {
                     const nonceBuffer = Buffer.from(nonce, "hex")
                     const encryptedBuffer = Buffer.from(encrypted, "hex")
 
-
                     if (!peerPublicKey) {
                         setMessage(
                             "Peer public key is required for decryption.",
@@ -187,7 +184,6 @@ export default function Decrypt({ showMnemonicPopup, onConfirmMnemonic }) {
                         return
                     }
 
-
                     const decryptedBuffer = nacl.box.open.after(
                         encryptedBuffer,
                         nonceBuffer,
@@ -198,7 +194,6 @@ export default function Decrypt({ showMnemonicPopup, onConfirmMnemonic }) {
                         setMessage("Decryption failed. Please check your keys.")
                         return
                     }
-
 
                     const blob = new Blob([decryptedBuffer], {
                         type: fileType || "application/octet-stream",
