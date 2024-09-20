@@ -43,15 +43,25 @@ export default function Encrypt({ showMnemonicPopup, onConfirmMnemonic }) {
         const reader = new FileReader()
         reader.onload = () => {
             const fileBuffer = Buffer.from(reader.result)
+
+            // הוספת סוג הקובץ למידע המוצפן
             const encryptedData = encryptFile(fileBuffer, publicKey, privateKey)
 
-            const blob = new Blob([JSON.stringify(encryptedData)], {
-                type: "application/json",
+            const encryptedFileData = {
+                nonce: encryptedData.nonce,
+                encrypted: encryptedData.encrypted,
+                fileType: file.type, // שמירת סוג הקובץ
+            }
+
+            // יצירת Blob מהאובייקט המוצפן
+            const blob = new Blob([JSON.stringify(encryptedFileData)], {
+                type: "application/json", // השארת הסוג כ-JSON עבור ההורדה
             })
+
             const url = URL.createObjectURL(blob)
             const link = document.createElement("a")
             link.href = url
-            link.download = `${file.name}.encrypted`
+            link.download = `encrypted` // שם הקובץ בהורדה
             document.body.appendChild(link)
             link.click()
             document.body.removeChild(link)

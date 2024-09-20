@@ -35,6 +35,10 @@ export default function Decrypt({ showMnemonicPopup, onConfirmMnemonic }) {
         try {
             const encryptedObj = JSON.parse(encryptedMessage)
             const { nonce, encrypted, type } = encryptedObj
+
+            // בדיקה אם סוג הקובץ קיים, ואם לא אז הגדרה לערך ברירת מחדל
+            const fileType = type || "application/octet-stream"
+
             const sharedSecret = getSharedSecret(
                 senderPublicKey,
                 recipientPrivateKey,
@@ -48,7 +52,7 @@ export default function Decrypt({ showMnemonicPopup, onConfirmMnemonic }) {
 
             if (decrypted) {
                 return new Blob([Buffer.from(decrypted)], {
-                    type: type || "application/octet-stream",
+                    type: fileType,
                 })
             } else {
                 console.error(
@@ -78,6 +82,8 @@ export default function Decrypt({ showMnemonicPopup, onConfirmMnemonic }) {
                 const encryptedJson = JSON.parse(
                     Buffer.from(reader.result).toString(),
                 )
+
+                const { fileType } = encryptedJson // משחזר את סוג הקובץ המוצפן
                 const decryptedBuffer = decryptFilefromEncrypt(
                     JSON.stringify(encryptedJson),
                     wallet.publicKey,
@@ -90,10 +96,10 @@ export default function Decrypt({ showMnemonicPopup, onConfirmMnemonic }) {
                 }
 
                 const blob = new Blob([decryptedBuffer], {
-                    type: "application/octet-stream",
+                    type: fileType || "application/octet-stream", // שימוש בסוג הקובץ או ברירת מחדל
                 })
 
-                const originalFileName = file.name.replace(".encrypted", "")
+                const originalFileName = file.name.replace(".json", "") // שינוי הסיומת חזרה לשם מקורי
                 const link = document.createElement("a")
                 link.href = URL.createObjectURL(blob)
                 link.download = originalFileName

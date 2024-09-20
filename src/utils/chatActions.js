@@ -81,6 +81,7 @@ export const handleSendFile = async ({
             "Encrypt File",
             "Do you want to encrypt the file before sending?",
         )
+
         const reader = new FileReader()
         reader.onload = async (event) => {
             const fileBuffer = Buffer.from(event.target.result)
@@ -98,7 +99,7 @@ export const handleSendFile = async ({
                     encrypted: encryptedFileData.encrypted,
                     fileType: selectedFile.type,
                 })
-                fileName = `encrypted${encryptFileCounter++}.txt`
+                fileName = `encrypted${encryptFileCounter++}.json`
             } else {
                 encMessage = fileBuffer.toString("hex")
                 fileName = selectedFile.name
@@ -118,13 +119,11 @@ export const handleSendFile = async ({
                 }),
             )
 
-            const displayName = confirmEncrypt ? fileName : fileName
-
             setMessages([
                 ...messages,
                 {
                     sender: peerId,
-                    content: displayName,
+                    content: fileName,
                     type: "file",
                     url: fileURL,
                     encrypted: confirmEncrypt,
@@ -190,9 +189,10 @@ export const handleReceiveFile = async (
         const { nonce, encrypted: encryptedData, fileType } = parsedData
 
         const fileBuffer = Buffer.from(encryptedData, "hex")
+        const fileTypeFinal = fileType || "application/octet-stream" // שימוש בסוג ברירת מחדל אם אין סוג קובץ
         fileURL = URL.createObjectURL(
             new Blob([fileBuffer], {
-                type: "application/octet-stream",
+                type: fileTypeFinal,
             }),
         )
         encrypted = true
@@ -204,26 +204,24 @@ export const handleReceiveFile = async (
         )
 
         if (!shouldDecrypt) {
-            const savePeerId = await openConfirmModal(
-            "Save the sender peer id",
-            `For future decryption: ${senderPublicKey}`,
-        )
-
             const jsonContent = JSON.stringify(
                 {
                     nonce,
                     encrypted: encryptedData,
-                    fileType,
+                    fileType: fileTypeFinal, // שמירת סוג הקובץ בקובץ המוצפן
                 },
                 null,
                 2,
             )
+
             const blob = new Blob([jsonContent], {
                 type: "application/json",
             })
+
+            // שמירה בשם ייחודי עם סיומת json
             fileURL = URL.createObjectURL(blob)
-            fileName = `encrypted${globalMessageCount}.txt`
-            toast.success("Encrypted file saved as JSON with nonce.")
+            fileName = `encrypted${globalMessageCount}.json` // קובץ מוצפן תמיד יורד כ-json עם מידע על סוג הקובץ
+            toast.success("Encrypted file saved as JSON with fileType.")
         } else {
             const decryptedBlob = decryptFile(
                 data.data,
@@ -232,7 +230,7 @@ export const handleReceiveFile = async (
             )
             if (decryptedBlob) {
                 fileURL = URL.createObjectURL(decryptedBlob)
-                fileName = `decrypted${globalMessageCount}.${fileType.split("/").pop()}`
+                fileName = `decrypted${globalMessageCount}.${fileTypeFinal.split("/").pop()}`
                 toast.success("File decrypted!")
             } else {
                 console.error("File decryption failed.")
