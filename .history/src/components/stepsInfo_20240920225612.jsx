@@ -1,3 +1,7 @@
+/**
+ * This component visually presents a series of steps that explain the process of setting up a secure chat.
+ */
+
 const steps = [
     {
         step: 1,

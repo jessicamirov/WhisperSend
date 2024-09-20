@@ -1,3 +1,7 @@
+/**
+ * This component provides a step-by-step guide on how the secure chat functionality works.
+ * It visually presents the process of initiating a secure chat, connecting to a peer, chatting securely, and recalculating keys for added security.
+ */
 export default function SecureChatInfo() {
     return (
         <div className="bg-white dark:bg-gray-800 p-10 rounded-xl shadow-2xl w-full max-w-4xl transform transition duration-500 hover:scale-105">
