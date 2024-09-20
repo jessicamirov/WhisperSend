@@ -38,12 +38,41 @@ export default function MessageInput() {
         setShowEmojiPicker(false)
     }
 
+    const handleKeyDown = (e) => {
+        console.log(e.key) // Check if Enter is detected
+        if (e.key === "Enter") {
+            if (isInputDisabled || initiatedDisconnect) {
+                toast.error(
+                    "You are disconnected or already disconnected. Cannot send messages.",
+                )
+                return
+            }
+            if (!connection) {
+                toast.error(
+                    "Connection is not established yet. Please try again.",
+                )
+                return
+            }
+            handleSendMessage({
+                message,
+                connection,
+                recipientPeerId,
+                messages,
+                myWallet,
+                peerId,
+                setMessages,
+                setMessage,
+            })
+        }
+    }
+
     return (
         <div className="flex flex-col space-y-2 md:space-y-0 md:flex-row md:items-center md:space-x-4">
             <div className="w-full">
                 <input
                     type="text"
                     value={message}
+                    onKeyDown={handleKeyDown}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Type your message..."
                     className="w-full p-3 sm:p-2 rounded-lg bg-gray-200 dark:bg-gray-600 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-xs md:text-base"

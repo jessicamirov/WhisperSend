@@ -7,8 +7,9 @@ import nacl from "tweetnacl"
 import InstructionsLayout from "../components/instructionsLayout"
 import { decryptionInstructions } from "../components/instructions"
 import ToggleInstructionsButton from "../components/toggleInstructionsButton"
+import MnemonicPopup from "../utils/mnemonicPopup"
 
-export default function Decrypt() {
+export default function Decrypt({ showMnemonicPopup, onConfirmMnemonic }) {
     const { myWallet } = useContext(PeerIdContext)
     const [file, setFile] = useState(null)
     const [mnemonic, setMnemonic] = useState("")
@@ -19,16 +20,6 @@ export default function Decrypt() {
     const [isChatFile, setIsChatFile] = useState(false)
     const [showInstructions, setShowInstructions] = useState(false)
     const [isSmallScreen, setIsSmallScreen] = useState(false)
-    const [showMnemonicPopup, setShowMnemonicPopup] = useState(false)
-    const [isMnemonicConfirmed, setIsMnemonicConfirmed] = useState(false)
-
-    // Popup for mnemonic confirmation on first load
-    useEffect(() => {
-        const isMnemonicSaved = sessionStorage.getItem("mnemonicSaved")
-        if (!isMnemonicSaved) {
-            alert("Please ensure that your mnemonic is saved.")
-        }
-    }, [])
 
     // File selection handler
     const handleFileChange = (e) => {
@@ -311,49 +302,11 @@ export default function Decrypt() {
                     />
                 </div>
             )}
-            {showMnemonicPopup && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">
-                        <h2 className="text-2xl font-bold mb-4">
-                            Mnemonic Words
-                        </h2>
-                        <p className="mb-4">
-                            Please save the following mnemonic phrase. You will
-                            need it to decrypt your files.
-                        </p>
-                        <div className="bg-gray-200 p-4 rounded mb-4">
-                            {myWallet.mnemonic.phrase}
-                        </div>
-                        <div className="mb-4">
-                            <button
-                                onClick={handleDownloadMnemonic}
-                                className="bg-blue-500 text-white px-4 py-2 rounded"
-                            >
-                                Download Mnemonic
-                            </button>
-                        </div>
-                        <div className="flex items-center">
-                            <input
-                                type="checkbox"
-                                id="confirm"
-                                className="mr-2"
-                                checked={isMnemonicConfirmed}
-                                onChange={() =>
-                                    setIsMnemonicConfirmed(!isMnemonicConfirmed)
-                                }
-                            />
-                            <label htmlFor="confirm" className="text-gray-700">
-                                I have written down the mnemonic phrase
-                            </label>
-                        </div>
-                        <button
-                            onClick={handleConfirmMnemonic}
-                            className="mt-4 bg-green-500 text-white px-4 py-2 rounded"
-                        >
-                            Confirm
-                        </button>
-                    </div>
-                </div>
+            {showMnemonicPopup && myWallet && (
+                <MnemonicPopup
+                    mnemonic={myWallet.mnemonic.phrase}
+                    onConfirm={onConfirmMnemonic}
+                />
             )}
         </div>
     )

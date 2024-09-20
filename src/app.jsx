@@ -14,67 +14,22 @@ import { useEffect, useState, useContext } from "preact/hooks"
 export function App() {
     const peerContext = useContext(PeerIdContext)
     const myWallet = peerContext?.myWallet || null
-    const [showMnemonicPopup, setShowMnemonicPopup] = useState(false)
-    const [currentPath, setCurrentPath] = useState("")
-    const [isLoadingMnemonic, setIsLoadingMnemonic] = useState(true)
+    const [showMnemonicPopup, setShowMnemonicPopup] = useState(true)
+        const [currentPath, setCurrentPath] = useState("")
+
 
     useEffect(() => {
-        const isMnemonicSaved = sessionStorage.getItem("mnemonicSaved")
-        const isMnemonicConfirmed = sessionStorage.getItem("mnemonicConfirmed")
-
-        // אם זה טעינת עמוד מחדש - איפוס נתונים
-        if (
-            performance.navigation.type === performance.navigation.TYPE_RELOAD
-        ) {
-            console.log("Page reload detected, clearing sessionStorage.")
-            sessionStorage.removeItem("mnemonicSaved")
-            sessionStorage.removeItem("mnemonicConfirmed")
+        if (myWallet) {
+            setShowMnemonicPopup(true)
         }
-
-        console.log("Mnemonic saved in sessionStorage:", isMnemonicSaved)
-        console.log(
-            "Mnemonic confirmed in sessionStorage:",
-            isMnemonicConfirmed,
-        )
-        console.log("Current path:", currentPath)
-
-        // בדיקת סטטוס שמירת ה-mnemonic
-        if (myWallet?.mnemonic?.phrase) {
-            if (!isMnemonicSaved && !isMnemonicConfirmed) {
-                console.log(
-                    "No saved mnemonic in sessionStorage. Showing MnemonicPopup.",
-                )
-                const validPaths = [
-                    "/encrypt",
-                    "/decrypt",
-                    "/shareSecurely",
-                    "/chat",
-                ]
-                if (validPaths.some((path) => currentPath.startsWith(path))) {
-                    console.log("Valid path detected. Showing MnemonicPopup.")
-                    setShowMnemonicPopup(true)
-                }
-            } else {
-                console.log(
-                    "Mnemonic already confirmed. No need to show the popup.",
-                )
-            }
-            setIsLoadingMnemonic(false)
-        } else {
-            console.log("Waiting for myWallet...")
-        }
-    }, [currentPath, myWallet])
-
-    const handleConfirmMnemonic = () => {
-        console.log("Mnemonic confirmed by user.")
-        sessionStorage.setItem("mnemonicSaved", "true")
-        sessionStorage.setItem("mnemonicConfirmed", "true")
-        setShowMnemonicPopup(false)
-    }
+    }, [myWallet])
 
     const handleRouteChange = (e) => {
-        console.log("Route changed to:", e.url)
         setCurrentPath(e.url)
+    }
+
+    const handleConfirmMnemonic = () => {
+        setShowMnemonicPopup(false)
     }
 
     return (
@@ -82,19 +37,25 @@ export function App() {
             <Layout>
                 <Router onChange={handleRouteChange}>
                     <Home path="/" />
-                    <Encrypt path="/encrypt" />
-                    <Decrypt path="/decrypt" />
-                    <ShareSecurely path="/shareSecurely" />
+                    <Encrypt
+                        path="/encrypt"
+                        showMnemonicPopup={showMnemonicPopup}
+                        onConfirmMnemonic={handleConfirmMnemonic}
+                    />
+                    <Decrypt
+                        path="/decrypt"
+                        showMnemonicPopup={showMnemonicPopup}
+                        onConfirmMnemonic={handleConfirmMnemonic}
+                    />
+                    <ShareSecurely
+                        path="/shareSecurely"
+                        showMnemonicPopup={showMnemonicPopup}
+                        onConfirmMnemonic={handleConfirmMnemonic}
+                    />
+
                     <ChatPage path="/chat/:connectPeerId" />
                 </Router>
             </Layout>
-            {/* הצגת ה-popup של ה-Mnemonic רק אם לא נטען קודם */}
-            {showMnemonicPopup && !isLoadingMnemonic && myWallet && (
-                <MnemonicPopup
-                    mnemonic={myWallet.mnemonic.phrase}
-                    onConfirm={handleConfirmMnemonic}
-                />
-            )}
 
             <ToastContainer
                 position="top-right"

@@ -5,90 +5,64 @@ import { PeerIdContext } from "../components/peerIdContext";
 import InstructionsLayout from "../components/instructionsLayout";
 import { encryptionInstructions } from "../components/instructions"
 import ToggleInstructionsButton from "../components/toggleInstructionsButton";
+import MnemonicPopup from "../utils/mnemonicPopup";
 
-export default function Encrypt() {
-    const { myWallet } = useContext(PeerIdContext);
-    const [file, setFile] = useState(null);
-    const [message, setMessage] = useState("");
-    const [isMnemonicConfirmed, setIsMnemonicConfirmed] = useState(false);
-    const [showMnemonicPopup, setShowMnemonicPopup] = useState(false);
-    const [isEncrypted, setIsEncrypted] = useState(false);
-    const [showInstructions, setShowInstructions] = useState(false);
-    const [isSmallScreen, setIsSmallScreen] = useState(false);
+export default function Encrypt({ showMnemonicPopup, onConfirmMnemonic }) {
+    const { myWallet } = useContext(PeerIdContext)
+    const [file, setFile] = useState(null)
+    const [message, setMessage] = useState("")
+    const [isEncrypted, setIsEncrypted] = useState(false)
+    const [showInstructions, setShowInstructions] = useState(false)
+    const [isSmallScreen, setIsSmallScreen] = useState(false)
 
     useEffect(() => {
         const handleResize = () => {
-            setIsSmallScreen(window.innerWidth < 768);
-        };
-
-        window.addEventListener("resize", handleResize);
-        handleResize();
-
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
-
-    useEffect(() => {
-        const isMnemonicSaved = sessionStorage.getItem("mnemonicSaved");
-        if (!isMnemonicSaved) {
-            setShowMnemonicPopup(true);
+            setIsSmallScreen(window.innerWidth < 768)
         }
-    }, []);
+
+        window.addEventListener("resize", handleResize)
+        handleResize()
+
+        return () => window.removeEventListener("resize", handleResize)
+    }, [])
 
     const handleFileChange = (e) => {
-        setFile(e.target.files[0]);
-        setMessage("");
-        setIsEncrypted(false);
-    };
-
-    const handleDownloadMnemonic = () => {
-        const blob = new Blob([myWallet.mnemonic.phrase], {
-            type: "text/plain",
-        });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "mnemonic.txt";
-        link.click();
-    };
-
-    const handleConfirmMnemonic = () => {
-        if (isMnemonicConfirmed) {
-            sessionStorage.setItem("mnemonicSaved", "true");
-            setShowMnemonicPopup(false);
-        } else {
-            alert("Please confirm that you have saved your mnemonic.");
-        }
-    };
+        setFile(e.target.files[0])
+        setMessage("")
+        setIsEncrypted(false)
+    }
 
     const handleEncrypt = async () => {
-        if (!file) return;
+        if (!file) return
 
-        setMessage("Encrypting file, please wait...");
+        setMessage("Encrypting file, please wait...")
 
-        const privateKey = myWallet.privateKey;
-        const publicKey = myWallet.publicKey;
+        const privateKey = myWallet.privateKey
+        const publicKey = myWallet.publicKey
 
-        const reader = new FileReader();
+        const reader = new FileReader()
         reader.onload = () => {
-            const fileBuffer = Buffer.from(reader.result);
-            const encryptedData = encryptFile(fileBuffer, publicKey, privateKey);
+            const fileBuffer = Buffer.from(reader.result)
+            const encryptedData = encryptFile(fileBuffer, publicKey, privateKey)
 
             const blob = new Blob([JSON.stringify(encryptedData)], {
                 type: "application/json",
-            });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = `${file.name}.encrypted`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            })
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement("a")
+            link.href = url
+            link.download = `${file.name}.encrypted`
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
 
-            setIsEncrypted(true);
-            setMessage("File encrypted successfully! The file is downloading now.");
-        };
-        reader.readAsArrayBuffer(file);
-    };
+            setIsEncrypted(true)
+            setMessage(
+                "File encrypted successfully! The file is downloading now.",
+            )
+        }
+        reader.readAsArrayBuffer(file)
+    }
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-gray-800 dark:to-gray-900 relative">
@@ -133,49 +107,11 @@ export default function Encrypt() {
                     />
                 </div>
             )}
-            {showMnemonicPopup && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">
-                        <h2 className="text-2xl font-bold mb-4">
-                            Mnemonic Words
-                        </h2>
-                        <p className="mb-4">
-                            Please save the following mnemonic phrase. You will
-                            need it to decrypt your files.
-                        </p>
-                        <div className="bg-gray-200 p-4 rounded mb-4">
-                            {myWallet.mnemonic.phrase}
-                        </div>
-                        <div className="mb-4">
-                            <button
-                                onClick={handleDownloadMnemonic}
-                                className="bg-blue-500 text-white px-4 py-2 rounded"
-                            >
-                                Download Mnemonic
-                            </button>
-                        </div>
-                        <div className="flex items-center">
-                            <input
-                                type="checkbox"
-                                id="confirm"
-                                className="mr-2"
-                                checked={isMnemonicConfirmed}
-                                onChange={() =>
-                                    setIsMnemonicConfirmed(!isMnemonicConfirmed)
-                                }
-                            />
-                            <label htmlFor="confirm" className="text-gray-700">
-                                I have written down the mnemonic phrase
-                            </label>
-                        </div>
-                        <button
-                            onClick={handleConfirmMnemonic}
-                            className="mt-4 bg-green-500 text-white px-4 py-2 rounded"
-                        >
-                            Confirm
-                        </button>
-                    </div>
-                </div>
+            {showMnemonicPopup && myWallet && (
+                <MnemonicPopup
+                    mnemonic={myWallet.mnemonic.phrase}
+                    onConfirm={onConfirmMnemonic}
+                />
             )}
         </div>
     )

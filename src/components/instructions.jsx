@@ -57,32 +57,28 @@ export const chatInstructions = [
     {
         step: 1,
         color: "blue",
-        title: "Connect",
-        description: "Enter peer ID and click 'Connect'.",
+        title: "Send Invite",
+        description:
+            "Send an invite to your peer to start a secure chat session.",
     },
     {
         step: 2,
         color: "green",
-        title: "Message",
-        description: "Type and send your message.",
+        title: "Connect",
+        description: "Enter the peer ID of your contact and connect securely.",
     },
     {
         step: 3,
         color: "yellow",
-        title: "Send File",
-        description: "Click paperclip to select a file.",
+        title: "Chat Securely",
+        description: "Start chatting securely and send encrypted files.",
     },
     {
         step: 4,
         color: "red",
-        title: "Encrypt",
-        description: "Click 'Encrypt & Send' to send file.",
-    },
-    {
-        step: 5,
-        color: "purple",
-        title: "Decrypt",
-        description: "Click 'Decrypt' to view received file.",
+        title: "Recalculate Keys",
+        description:
+            "Recalculate your encryption keys regularly for added security.",
     },
 ]
 

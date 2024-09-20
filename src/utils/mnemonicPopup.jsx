@@ -1,56 +1,58 @@
-import { useState } from "preact/hooks";
+import { useState, useEffect } from "preact/hooks"
 
 export default function MnemonicPopup({ mnemonic, onConfirm }) {
-    const [isMnemonicConfirmed, setIsMnemonicConfirmed] = useState(false);
+    const [isMnemonicConfirmed, setIsMnemonicConfirmed] = useState(false)
 
-    // פונקציה להורדת המנמוניק כקובץ
     const handleDownloadMnemonic = () => {
-        const blob = new Blob([mnemonic], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "mnemonic.txt";
-        link.click();
-    };
+        const blob = new Blob([mnemonic], { type: "text/plain" })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.href = url
+        link.download = "mnemonic.txt"
+        link.click()
+    }
 
-    // פונקציה להעתקת המנמוניק ללוח
-    const handleCopyMnemonic = () => {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(mnemonic)
-                .then(() => {
-                    alert("Mnemonic copied to clipboard!");
-                })
-                .catch((err) => {
-                    console.error("Failed to copy mnemonic: ", err);
-                });
+const handleCopyMnemonic = () => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        // ניסיון להעתיק באמצעות clipboard API
+        navigator.clipboard
+            .writeText(mnemonic)
+            .then(() => {
+                alert("Mnemonic copied to clipboard!") // הודעה אחרי הצלחה
+            })
+            .catch((err) => {
+                console.error(
+                    "Failed to copy mnemonic using clipboard API: ",
+                    err,
+                )
+                // אין צורך להציג הודעה נוספת או לבצע Fallback
+            })
+    } else {
+        console.error("Clipboard API not supported or available.")
+    }
+}
+
+    const handleConfirm = () => {
+        if (isMnemonicConfirmed) {
+            localStorage.setItem("mnemonicConfirmed", "true")
+            onConfirm()
         } else {
-            // fallback לשימוש במקרה שאין תמיכה ב-navigator.clipboard
-            const textarea = document.createElement("textarea");
-            textarea.value = mnemonic;
-            document.body.appendChild(textarea);
-            textarea.select();
-            try {
-                document.execCommand("copy");
-                alert("Mnemonic copied to clipboard!");
-            } catch (err) {
-                console.error("Fallback: Failed to copy mnemonic", err);
-            }
-            document.body.removeChild(textarea);
+            alert("Please confirm that you saved the mnemonic.")
         }
-    };
+    }
 
     return (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">
-                <h2 className="text-2xl font-bold mb-4">Mnemonic Words</h2>
-                <p className="mb-4">
-                    Please save the following mnemonic phrase. You will need it
-                    to decrypt your files.
+                <h2 className="text-2xl font-bold mb-4">Mnemonic phrase</h2>
+                <p className="mb-2 text-gray-600">
+                    A mnemonic phrase is a series of words that represent your
+                    personal key. You will need it to recover your files in the
+                    future, so it's very important to keep it in a safe place.
                 </p>
-                {/* הוספת אפשרות להעתיק את הטקסט בלחיצה */}
                 <div
                     className="bg-gray-200 p-4 rounded mb-4 cursor-pointer"
-                    onClick={handleCopyMnemonic} // נוסיף את הפונקציה כאן להעתיק בלחיצה על הטקסט
+                    onClick={handleCopyMnemonic}
                 >
                     {mnemonic}
                 </div>
@@ -77,19 +79,12 @@ export default function MnemonicPopup({ mnemonic, onConfirm }) {
                     </label>
                 </div>
                 <button
-                    onClick={() => {
-                        if (isMnemonicConfirmed) {
-                            handleCopyMnemonic(); // הוספת העתקה בעת לחיצה על Confirm
-                            onConfirm();
-                        } else {
-                            alert("Please confirm that you saved the mnemonic.");
-                        }
-                    }}
+                    onClick={handleConfirm}
                     className="mt-4 bg-green-500 text-white px-4 py-2 rounded"
                 >
                     Confirm
                 </button>
             </div>
         </div>
-    );
+    )
 }
