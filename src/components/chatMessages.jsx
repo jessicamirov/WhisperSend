@@ -1,7 +1,6 @@
 import { useContext } from "preact/hooks"
 import { PeerIdContext } from "./peerIdContext"
 
-
 /**
  * ChatMessages component displays the chat messages in a scrollable container.
  * It handles both text and file messages, with a download option for files.

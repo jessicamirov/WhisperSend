@@ -1,6 +1,5 @@
 import { route } from "preact-router"
 
-
 /**
  * FeaturesOverview component displays an overview of available actions (Encrypt Files, Decrypt Files, Secure Chat).
  */

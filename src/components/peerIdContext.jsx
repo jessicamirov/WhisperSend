@@ -29,7 +29,6 @@ let connectionCancelled = false
  * Handles confirmation modals for connection acceptance, rejection, and disconnection alerts.
  */
 
-
 export const PeerIdProvider = ({ children }) => {
     const [peer, setPeer] = useState(null)
     const [connection, setConnection] = useState(null)

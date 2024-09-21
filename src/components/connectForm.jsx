@@ -1,7 +1,6 @@
 import { useState, useContext } from "preact/hooks"
 import { PeerIdContext } from "../components/peerIdContext"
 
-
 /**
  * ConnectForm component allows users to input a Peer ID and attempt to connect with another peer.
  * It handles connection attempts, errors, and connection cancellation.

@@ -7,7 +7,6 @@ import { ethers } from "ethers"
 // Destructure `utils` from ethers
 const { utils } = ethers
 
-
 /**
  * Decompresses a public key using ethers.js
  */
